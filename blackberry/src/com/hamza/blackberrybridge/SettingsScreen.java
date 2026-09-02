@@ -5,19 +5,39 @@ import net.rim.device.api.ui.component.*;
 import net.rim.device.api.ui.container.*;
 import net.rim.device.api.ui.decor.*;
 import java.util.Vector;
+import net.rim.device.api.system.Clipboard;
 
 public class SettingsScreen extends MainScreen {
     private SettingsManager settingsManager;
+    private SmartBridgeApp app;
     private BasicEditField[] quickReplyFields = new BasicEditField[3];
     
-    public SettingsScreen(SettingsManager manager) {
+    public SettingsScreen(SettingsManager manager, SmartBridgeApp app) {
         this.settingsManager = manager;
+        this.app = app;
         getMainManager().setBackground(BackgroundFactory.createSolidBackground(Color.BLACK));
         
         DarkLabelField title = new DarkLabelField("SETTINGS", Field.FIELD_HCENTER, 0x0078D7);
-        try { title.setFont(Font.getDefault().derive(Font.BOLD, 24)); } catch(Exception e){}
+        try { title.setFont(Font.getDefault().derive(Font.BOLD, 20)); } catch(Exception e){}
         add(title);
         add(new SeparatorField());
+        
+        HorizontalFieldManager hfmNight = new HorizontalFieldManager();
+        DarkLabelField lblNight = new DarkLabelField("Night Mode: ", Color.WHITE);
+        final DarkButtonField btnNight = new DarkButtonField(settingsManager.isNightMode() ? "ON" : "OFF", 100, 30);
+        btnNight.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) {
+                if (btnNight.getText().equals("ON")) {
+                    btnNight.setText("OFF");
+                    settingsManager.setNightMode(false);
+                } else {
+                    btnNight.setText("ON");
+                    settingsManager.setNightMode(true);
+                }
+            }
+        });
+        hfmNight.add(lblNight); hfmNight.add(btnNight);
+        add(hfmNight);
         
         HorizontalFieldManager hfmAuth = new HorizontalFieldManager();
         DarkLabelField lblAuto = new DarkLabelField("Auto-Reconnect: ", Color.WHITE);
@@ -54,10 +74,33 @@ public class SettingsScreen extends MainScreen {
         add(hfmDebug);
         
         add(new SeparatorField());
-        add(new DarkLabelField("Quick Replies (Top 3):", 0x0078D7));
         
-        // BasicEditField displays black text, which is bad on black background.
-        // Unfortunately standard fields are hard to style in BBOS. We will just use them anyway, BB handles cursor
+        HorizontalFieldManager hfmActions = new HorizontalFieldManager(Field.FIELD_HCENTER);
+        DarkButtonField btnFindPhone = new DarkButtonField("Find Phone", 130, 40);
+        btnFindPhone.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) {
+                app.getConnectionManager().sendData("FIND_PHONE\n");
+            }
+        });
+        DarkButtonField btnSyncClip = new DarkButtonField("Sync Clip", 130, 40);
+        btnSyncClip.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) {
+                String clip = Clipboard.getClipboard().getString();
+                if (clip != null && clip.length() > 0) {
+                    app.getConnectionManager().sendData("CLIPBOARD|" + clip + "\n");
+                }
+            }
+        });
+        hfmActions.add(btnFindPhone);
+        hfmActions.add(btnSyncClip);
+        add(hfmActions);
+        
+        add(new SeparatorField());
+        
+        DarkLabelField lblQR = new DarkLabelField("Quick Replies (Top 3):", 0x0078D7);
+        try { lblQR.setFont(Font.getDefault().derive(Font.PLAIN, 16)); } catch(Exception e){}
+        add(lblQR);
+        
         Vector qr = settingsManager.getQuickReplies();
         for (int i = 0; i < 3; i++) {
             String val = "";
@@ -70,7 +113,7 @@ public class SettingsScreen extends MainScreen {
         
         add(new SeparatorField());
         
-        DarkButtonField saveBtn = new DarkButtonField("Save Settings", 200, 45);
+        DarkButtonField saveBtn = new DarkButtonField("Save Settings", 200, 40);
         saveBtn.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) {
                 saveSettings();

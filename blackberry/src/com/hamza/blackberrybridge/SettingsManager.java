@@ -19,6 +19,7 @@ public class SettingsManager {
             settings = new Hashtable();
             settings.put("auto_reconnect", new Boolean(true));
             settings.put("debug_mode", new Boolean(false));
+            settings.put("night_mode", new Boolean(false));
             
             Vector defaultQr = new Vector();
             defaultQr.addElement("I'm busy right now.");
@@ -50,6 +51,16 @@ public class SettingsManager {
         settings.put("debug_mode", new Boolean(val));
         persistentObject.commit();
         LogManager.setDebugEnabled(val); // Toggle logs
+    }
+    
+    public boolean isNightMode() {
+        Boolean b = (Boolean) settings.get("night_mode");
+        return b != null ? b.booleanValue() : false;
+    }
+
+    public void setNightMode(boolean val) {
+        settings.put("night_mode", new Boolean(val));
+        persistentObject.commit();
     }
     
     public Vector getQuickReplies() {

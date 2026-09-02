@@ -7,47 +7,61 @@ import net.rim.device.api.ui.decor.*;
 
 public class MediaScreen extends MainScreen {
     private MediaManager mediaManager;
+    private DarkLabelField titleLabel;
+    private DarkLabelField artistLabel;
     
     public MediaScreen(MediaManager manager) {
         this.mediaManager = manager;
+        manager.setActiveScreen(this);
+        
         getMainManager().setBackground(BackgroundFactory.createSolidBackground(Color.BLACK));
         
-        DarkLabelField title = new DarkLabelField("MUSIC PLAYER", Field.FIELD_HCENTER, 0x0078D7);
-        try { title.setFont(Font.getDefault().derive(Font.BOLD, 24)); } catch(Exception e){}
-        add(title);
+        DarkLabelField header = new DarkLabelField("MEDIA CONTROL", Field.FIELD_HCENTER, 0x0078D7);
+        try { header.setFont(Font.getDefault().derive(Font.BOLD, 24)); } catch(Exception e){}
+        add(header);
         add(new SeparatorField());
         
-        VerticalFieldManager vfm = new VerticalFieldManager(Field.FIELD_HCENTER | Field.FIELD_VCENTER);
-        vfm.setPadding(50, 0, 0, 0);
+        titleLabel = new DarkLabelField(mediaManager.getTitle(), Field.FIELD_HCENTER, Color.WHITE);
+        try { titleLabel.setFont(Font.getDefault().derive(Font.BOLD, 20)); } catch(Exception e){}
         
-        DarkButtonField playPauseBtn = new DarkButtonField("Play / Pause", 200, 80);
-        playPauseBtn.setChangeListener(new FieldChangeListener() {
-            public void fieldChanged(Field field, int context) { mediaManager.play(); }
-        });
-        vfm.add(playPauseBtn);
+        artistLabel = new DarkLabelField(mediaManager.getArtist(), Field.FIELD_HCENTER, 0xAAAAAA);
         
-        HorizontalFieldManager hfm = new HorizontalFieldManager(Field.FIELD_HCENTER);
-        hfm.setPadding(20, 0, 0, 0);
+        add(titleLabel);
+        add(artistLabel);
+        add(new SeparatorField());
         
-        DarkButtonField prevBtn = new DarkButtonField("<< Prev", 120, 60);
-        prevBtn.setChangeListener(new FieldChangeListener() {
+        HorizontalFieldManager btns = new HorizontalFieldManager(Field.FIELD_HCENTER);
+        
+        DarkButtonField btnPrev = new DarkButtonField("<<", 100, 60);
+        btnPrev.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) { mediaManager.previous(); }
         });
-        hfm.add(prevBtn);
         
-        DarkButtonField nextBtn = new DarkButtonField("Next >>", 120, 60);
-        nextBtn.setChangeListener(new FieldChangeListener() {
+        DarkButtonField btnPlay = new DarkButtonField("Play/Pause", 150, 60);
+        btnPlay.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) { mediaManager.play(); } // In real implementation, maybe toggle
+        });
+        
+        DarkButtonField btnNext = new DarkButtonField(">>", 100, 60);
+        btnNext.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) { mediaManager.next(); }
         });
-        hfm.add(nextBtn);
         
-        vfm.add(hfm);
-        add(vfm);
+        btns.add(btnPrev);
+        btns.add(btnPlay);
+        btns.add(btnNext);
+        add(btns);
+    }
+    
+    public void refreshMeta() {
+        titleLabel.setText(mediaManager.getTitle());
+        artistLabel.setText(mediaManager.getArtist());
     }
     
     protected boolean keyDown(int keycode, int time) {
         int key = Keypad.key(keycode);
         if (key == Keypad.KEY_END || key == Keypad.KEY_ESCAPE) { 
+            mediaManager.setActiveScreen(null);
             close();
             return true;
         }

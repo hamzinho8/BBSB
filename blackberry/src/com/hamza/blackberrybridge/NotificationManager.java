@@ -22,7 +22,7 @@ public class NotificationManager {
         }
         notifications.addElement(n);
         
-        HardwareManager.triggerNotificationAlert();
+        HardwareManager.triggerNotificationAlert(appName);
         uiManager.notifyNewNotification(n);
     }
     

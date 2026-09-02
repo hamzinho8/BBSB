@@ -41,6 +41,14 @@ public class UIManager {
         });
     }
     
+    public void updateWeather(final String temp, final String cond) {
+        Application.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                mainScreen.updateWeather(temp, cond);
+            }
+        });
+    }
+    
     public void notifyNewNotification(final Notification n) {
         Application.getApplication().invokeLater(new Runnable() {
             public void run() {
@@ -71,6 +79,6 @@ public class UIManager {
     }
     
     public void openSettings() {
-        pushScreen(new SettingsScreen(app.getSettingsManager()));
+        pushScreen(new SettingsScreen(app.getSettingsManager(), app));
     }
 }

@@ -14,6 +14,7 @@ public class SmartBridgeScreen extends MainScreen {
     private DarkLabelField dateLabel;
     private DarkLabelField btStatusLabel;
     private DarkLabelField batteryLabel;
+    private DarkLabelField weatherLabel;
     private DarkButtonField btnNotifs;
     private SmartBridgeApp app;
     private Timer uiTimer;
@@ -27,7 +28,10 @@ public class SmartBridgeScreen extends MainScreen {
         VerticalFieldManager header = new VerticalFieldManager(Field.FIELD_HCENTER);
         header.setPadding(10, 0, 5, 0); 
         
-        clockLabel = new DarkLabelField("--:--", Field.FIELD_HCENTER, Color.WHITE);
+        boolean isNight = app.getSettingsManager().isNightMode();
+        int clockColor = isNight ? 0x555555 : Color.WHITE;
+        
+        clockLabel = new DarkLabelField("--:--", Field.FIELD_HCENTER, clockColor);
         try {
             clockLabel.setFont(Font.getDefault().derive(Font.BOLD, 70));
         } catch (Exception e) {}
@@ -35,11 +39,14 @@ public class SmartBridgeScreen extends MainScreen {
         dateLabel = new DarkLabelField("---", Field.FIELD_HCENTER, 0xAAAAAA);
         try { dateLabel.setFont(Font.getDefault().derive(Font.PLAIN, 20)); } catch(Exception e){}
         
+        weatherLabel = new DarkLabelField("", Field.FIELD_HCENTER, 0x0078D7); // Blueish for weather
+        
         header.add(clockLabel);
         header.add(dateLabel);
+        header.add(weatherLabel);
         
         HorizontalFieldManager statusContainer = new HorizontalFieldManager(Field.FIELD_HCENTER);
-        statusContainer.setPadding(5, 0, 15, 0);
+        statusContainer.setPadding(5, 0, 10, 0);
         
         btStatusLabel = new DarkLabelField("[BT: WAIT] ", 0xFF0000); 
         batteryLabel = new DarkLabelField("[AND: --%] [BB: --%]", 0xAAAAAA);
@@ -59,10 +66,9 @@ public class SmartBridgeScreen extends MainScreen {
         // --- 3x3 LAUNCHER GRID ---
         VerticalFieldManager grid = new VerticalFieldManager(Field.FIELD_HCENTER);
         
-        int btnW = 145; // 3 * 145 = 435px (centered perfectly inside 480px width)
-        int btnH = 45; // Smaller height to fit 3 rows in 360px screen
+        int btnW = 145;
+        int btnH = 40; // Smaller height to fit everything with weather label
         
-        // Row 1
         HorizontalFieldManager row1 = new HorizontalFieldManager(Field.FIELD_HCENTER);
         DarkButtonField btnCalls = new DarkButtonField("Calls", btnW, btnH);
         btnCalls.setChangeListener(new FieldChangeListener() {
@@ -84,7 +90,6 @@ public class SmartBridgeScreen extends MainScreen {
         row1.add(btnNotifs);
         grid.add(row1);
         
-        // Row 2
         HorizontalFieldManager row2 = new HorizontalFieldManager(Field.FIELD_HCENTER);
         DarkButtonField btnWA = new DarkButtonField("WhatsApp", btnW, btnH);
         btnWA.setChangeListener(new FieldChangeListener() {
@@ -106,7 +111,6 @@ public class SmartBridgeScreen extends MainScreen {
         row2.add(btnTG);
         grid.add(row2);
         
-        // Row 3
         HorizontalFieldManager row3 = new HorizontalFieldManager(Field.FIELD_HCENTER);
         DarkButtonField btnContacts = new DarkButtonField("Contacts", btnW, btnH);
         btnContacts.setChangeListener(new FieldChangeListener() {
@@ -163,6 +167,10 @@ public class SmartBridgeScreen extends MainScreen {
         }
         int bbBat = DeviceInfo.getBatteryLevel();
         batteryLabel.setText("[AND: " + andBat + "] [BB: " + bbBat + "%]");
+        
+        // Refresh Night Mode color if changed
+        boolean isNight = app.getSettingsManager().isNightMode();
+        clockLabel.setColor(isNight ? 0x555555 : Color.WHITE);
     }
     
     public void updateConnectionStatus(String status) {
@@ -173,6 +181,10 @@ public class SmartBridgeScreen extends MainScreen {
             btStatusLabel.setText("[BT: WAIT] ");
             btStatusLabel.setColor(0xFF0000); 
         }
+    }
+    
+    public void updateWeather(String temp, String cond) {
+        weatherLabel.setText(temp + " - " + cond);
     }
 
     public void updateBattery(String level) {
@@ -196,7 +208,8 @@ public class SmartBridgeScreen extends MainScreen {
     protected boolean keyDown(int keycode, int time) {
         int key = Keypad.key(keycode);
         if (key == Keypad.KEY_END) { 
-            System.exit(0);
+            // Instead of System.exit(0), request background mode to keep receiving BT events!
+            Application.getApplication().requestBackground();
             return true;
         }
         return super.keyDown(keycode, time);
