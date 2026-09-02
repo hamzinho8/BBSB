@@ -32,7 +32,7 @@ public class NotificationManager {
     
     public void openNotification(Notification n) {
         HardwareManager.stopAlerts();
-        uiManager.pushScreen(new NotificationDetailScreen(this, n));
+        uiManager.pushScreen(new NotificationDetailScreen(this, n, app));
     }
     
     public void replyToNotification(String id, String text) {

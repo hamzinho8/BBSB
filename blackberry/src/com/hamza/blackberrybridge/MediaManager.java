@@ -1,14 +1,14 @@
 package com.hamza.blackberrybridge;
 
 public class MediaManager {
-    private ConnectionManager connectionManager;
+    private SmartBridgeApp app;
     
-    public MediaManager(ConnectionManager connectionManager) {
-        this.connectionManager = connectionManager;
+    public MediaManager(SmartBridgeApp app) {
+        this.app = app;
     }
     
-    public void play() { connectionManager.sendData("MEDIA_PLAY\n"); }
-    public void pause() { connectionManager.sendData("MEDIA_PAUSE\n"); }
-    public void next() { connectionManager.sendData("MEDIA_NEXT\n"); }
-    public void previous() { connectionManager.sendData("MEDIA_PREVIOUS\n"); }
+    public void play() { app.getConnectionManager().sendData("MEDIA_PLAY\n"); }
+    public void pause() { app.getConnectionManager().sendData("MEDIA_PAUSE\n"); }
+    public void next() { app.getConnectionManager().sendData("MEDIA_NEXT\n"); }
+    public void previous() { app.getConnectionManager().sendData("MEDIA_PREVIOUS\n"); }
 }

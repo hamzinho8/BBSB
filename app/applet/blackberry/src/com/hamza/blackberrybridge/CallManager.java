@@ -29,6 +29,7 @@ public class CallManager {
             currentCallScreen.close();
             currentCallScreen = null;
         }
+        uiManager.getMainScreen().addLog("[CALL] Call ended");
     }
     
     public void handleCallMissed(String id, String name, String number) {
@@ -38,6 +39,7 @@ public class CallManager {
             currentCallScreen = null;
         }
         LogManager.log("CALL", "Missed call from " + name);
+        uiManager.getMainScreen().addLog("[CALL] Missed: " + name);
     }
     
     public void answerCall(String id) {
@@ -50,5 +52,7 @@ public class CallManager {
     
     public void initiateCall(String number) {
         app.getConnectionManager().sendData("CALL|" + number + "\n");
+        HardwareManager.triggerNotificationAlert(); // small vibrate to confirm
+        uiManager.getMainScreen().addLog("[CALL] Outgoing: " + number);
     }
 }

@@ -32,7 +32,7 @@ public class UIManager {
             }
         });
     }
-    
+
     public void updateBattery(final String level) {
         Application.getApplication().invokeLater(new Runnable() {
             public void run() {
@@ -62,15 +62,15 @@ public class UIManager {
         pushScreen(notifListScreen);
     }
     
+    public void openSettings() {
+        pushScreen(new SettingsScreen(app.getSettingsManager()));
+    }
+    
     public void openContacts() {
         pushScreen(new ContactListScreen(app.getContactManager()));
     }
     
     public void openMedia() {
         pushScreen(new MediaScreen(app.getMediaManager()));
-    }
-    
-    public void openSettings() {
-        pushScreen(new SettingsScreen(app.getSettingsManager()));
     }
 }
