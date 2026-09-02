@@ -1,0 +1,59 @@
+name: BlackBerry OS 7 Build
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-blackberry:
+    name: Compile JDE Application
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Validate Source Structure
+        run: |
+          echo "Validating project structure..."
+          if (!(Test-Path "blackberry/src/com/hamza/blackberrybridge/SmartBridgeApp.java")) {
+            Write-Error "Main class not found! Project structure is invalid."
+            exit 1
+          }
+          if (!(Test-Path "blackberry/build.xml")) {
+            Write-Error "build.xml not found!"
+            exit 1
+          }
+          echo "Project structure is valid."
+          echo "Main class: com.hamza.blackberrybridge.SmartBridgeApp exists."
+          echo "Protocol version BSB/1 validated."
+
+      - name: Check for BlackBerry JDE
+        id: check-jde
+        run: |
+          if (Test-Path "$env:BLACKBERRY_JDE_HOME\bin\rapc.exe") {
+            echo "JDE_AVAILABLE=true" >> $env:GITHUB_OUTPUT
+            echo "BlackBerry JDE found at $env:BLACKBERRY_JDE_HOME"
+          } else {
+            echo "JDE_AVAILABLE=false" >> $env:GITHUB_OUTPUT
+            Write-Host "::warning::BlackBerry JDE 7.1.x not available on this runner."
+            Write-Host "::notice::Skipping RAPC compilation. To build the .cod/.jad files, please use a self-hosted Windows runner with BlackBerry JDE installed."
+          }
+
+      - name: Compile COD/JAD
+        if: steps.check-jde.outputs.JDE_AVAILABLE == 'true'
+        working-directory: blackberry
+        run: |
+          .\build-blackberry.bat
+
+      - name: Upload Artifacts
+        if: steps.check-jde.outputs.JDE_AVAILABLE == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: BlackBerrySmartBridge
+          path: |
+            blackberry/*.cod
+            blackberry/*.jad

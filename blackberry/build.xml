@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="BlackBerrySmartBridge" default="build">
+    <property environment="env"/>
+    
+    <!-- Use BLACKBERRY_JDE_HOME environment variable, fallback to default -->
+    <property name="jde.home" value="${env.BLACKBERRY_JDE_HOME}"/>
+    
+    <target name="check-env">
+        <fail message="BLACKBERRY_JDE_HOME is not set. Please set it to your JDE installation path." unless="env.BLACKBERRY_JDE_HOME"/>
+    </target>
+
+    <target name="build" depends="check-env">
+        <echo message="Building BlackBerrySmartBridge using RAPC in ${jde.home}..."/>
+        <exec executable="${jde.home}/bin/rapc.exe" failonerror="true">
+            <arg value="import=${jde.home}/lib/net_rim_api.jar"/>
+            <arg value="codename=BlackBerrySmartBridge"/>
+            <arg value="BlackBerrySmartBridge.jdp"/>
+        </exec>
+    </target>
+
+    <target name="clean">
+        <delete>
+            <fileset dir="." includes="*.cod,*.jad,*.cso,*.debug,*.jar"/>
+        </delete>
+    </target>
+</project>

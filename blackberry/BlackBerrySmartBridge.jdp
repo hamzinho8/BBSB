@@ -1,0 +1,24 @@
+# BlackBerry JDE Project
+Title=BlackBerrySmartBridge
+Version=1.0.4
+Vendor=Hamza
+Description=Android Bluetooth Companion for BlackBerry
+Type=0
+RibbonPosition=0
+[Files]
+src\com\hamza\blackberrybridge\BatteryManager.java
+src\com\hamza\blackberrybridge\BluetoothManager.java
+src\com\hamza\blackberrybridge\BluetoothServer.java
+src\com\hamza\blackberrybridge\CallManager.java
+src\com\hamza\blackberrybridge\ConnectionManager.java
+src\com\hamza\blackberrybridge\ContactManager.java
+src\com\hamza\blackberrybridge\InputManager.java
+src\com\hamza\blackberrybridge\LogManager.java
+src\com\hamza\blackberrybridge\MediaManager.java
+src\com\hamza\blackberrybridge\MessageManager.java
+src\com\hamza\blackberrybridge\NotificationManager.java
+src\com\hamza\blackberrybridge\ProtocolManager.java
+src\com\hamza\blackberrybridge\SettingsManager.java
+src\com\hamza\blackberrybridge\SmartBridgeApp.java
+src\com\hamza\blackberrybridge\SmartBridgeScreen.java
+src\com\hamza\blackberrybridge\UIManager.java
