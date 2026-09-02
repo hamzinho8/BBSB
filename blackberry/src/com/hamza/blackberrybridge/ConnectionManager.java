@@ -1,15 +1,20 @@
 package com.hamza.blackberrybridge;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 public class ConnectionManager {
     private BluetoothServer btServer;
     private ProtocolManager protocolManager;
     private UIManager uiManager;
     private SmartBridgeApp app;
+    private long lastDataTime = 0;
+    private Timer watchdogTimer;
     
     public ConnectionManager(UIManager uiManager, SmartBridgeApp app) {
         this.uiManager = uiManager;
         this.app = app;
-        this.protocolManager = new ProtocolManager(this, uiManager);
+        this.protocolManager = new ProtocolManager(this, app);
     }
     
     public void startServer() {
@@ -18,17 +23,48 @@ public class ConnectionManager {
             btServer.stopServer();
         }
         btServer = new BluetoothServer(this);
-        btServer.start(); // Starts the dedicated Bluetooth Thread
+        btServer.start();
+        
+        startWatchdog();
     }
     
     public void stopServer() {
+        stopWatchdog();
         if (btServer != null) {
             btServer.stopServer();
             btServer = null;
         }
     }
     
+    private void startWatchdog() {
+        stopWatchdog();
+        watchdogTimer = new Timer();
+        watchdogTimer.schedule(new TimerTask() {
+            public void run() {
+                if (btServer != null && btServer.isConnected()) {
+                    long now = System.currentTimeMillis();
+                    // If no data for 20 seconds, connection might be dead
+                    if (now - lastDataTime > 20000) {
+                        LogManager.error("ConnMgr", "Watchdog timeout. Restarting connection.");
+                        btServer.forceDisconnect();
+                    } else {
+                        // Send PING
+                        sendData("PING\n");
+                    }
+                }
+            }
+        }, 10000, 10000); // Check every 10 seconds
+    }
+    
+    private void stopWatchdog() {
+        if (watchdogTimer != null) {
+            watchdogTimer.cancel();
+            watchdogTimer = null;
+        }
+    }
+    
     public void onConnected() {
+        lastDataTime = System.currentTimeMillis();
         LogManager.log("ConnMgr", "Android connected");
         uiManager.updateConnectionStatus("CONNECTED");
     }
@@ -36,17 +72,11 @@ public class ConnectionManager {
     public void onDisconnected() {
         LogManager.log("ConnMgr", "Connection lost");
         uiManager.updateConnectionStatus("DISCONNECTED");
-        
-        // Wait a moment before restarting the server to prevent CPU spin loops
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-        }
-        
-        startServer();
+        // BluetoothServer has its own retry loop now. We do NOT call startServer() here.
     }
     
     public void onDataReceived(String data) {
+        lastDataTime = System.currentTimeMillis();
         protocolManager.processMessage(data);
     }
     

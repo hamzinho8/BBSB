@@ -10,7 +10,6 @@ import javax.microedition.io.StreamConnection;
 import javax.microedition.io.StreamConnectionNotifier;
 
 public class BluetoothServer extends Thread {
-    // SPP UUID: 00001101-0000-1000-8000-00805F9B34FB
     private static final String UUID = "0000110100001000800000805F9B34FB";
     private static final String URL = "btspp://localhost:" + UUID + ";name=SmartBridge;authorize=false;encrypt=false";
     
@@ -29,16 +28,19 @@ public class BluetoothServer extends Thread {
     
     public void run() {
         try {
-            // Set device to be discoverable
             LocalDevice.getLocalDevice().setDiscoverable(DiscoveryAgent.GIAC);
             LogManager.log("BT", "Starting SPP Server...");
-            
-            notifier = (StreamConnectionNotifier) Connector.open(URL);
-            
-            while (running) {
-                LogManager.log("BT", "Waiting for Android...");
+        } catch (Exception e) {
+            LogManager.error("BT_ERR", "Cannot make discoverable");
+        }
+        
+        while (running) {
+            try {
+                if (notifier == null) {
+                    notifier = (StreamConnectionNotifier) Connector.open(URL);
+                }
                 
-                // This call blocks until a client connects. Thread is necessary!
+                LogManager.log("BT", "Waiting for Android...");
                 connection = notifier.acceptAndOpen();
                 LogManager.log("BT", "Connected!");
                 connected = true;
@@ -51,18 +53,15 @@ public class BluetoothServer extends Thread {
                 StringBuffer buffer = new StringBuffer();
                 int ch;
                 
-                // Read loop
                 while (running && connected) {
                     try {
                         ch = inputStream.read();
                         if (ch == -1) {
-                            // Stream closed by peer
                             break;
                         }
                         
                         if (ch == '\n') {
                             String msg = buffer.toString();
-                            LogManager.log("RX", msg);
                             connectionManager.onDataReceived(msg);
                             buffer.setLength(0);
                         } else if (ch != '\r') {
@@ -70,39 +69,42 @@ public class BluetoothServer extends Thread {
                         }
                         
                         if (buffer.length() > 4096) {
-                            LogManager.error("BT", "Message too long, clearing buffer");
+                            LogManager.error("BT", "Buffer overflow");
                             connectionManager.sendData("ERROR|MESSAGE_TOO_LONG\n");
                             buffer.setLength(0);
                         }
                     } catch (IOException e) {
-                        LogManager.error("BT_READ", e.getMessage());
-                        break; // Exit read loop on error
+                        break;
                     }
                 }
-                
+            } catch (Exception e) {
+                LogManager.error("BT_ERR", "Server Exception: " + e.getMessage());
+                try { Thread.sleep(3000); } catch (Exception sleepEx) {}
+            } finally {
                 cleanupConnection();
             }
-        } catch (Exception e) {
-            LogManager.error("BT_ERR", "Server Exception: " + e.getMessage());
-            cleanupConnection();
         }
     }
     
     private void cleanupConnection() {
         connected = false;
-        try { if (inputStream != null) inputStream.close(); } catch (Exception e) {}
-        try { if (outputStream != null) outputStream.close(); } catch (Exception e) {}
-        try { if (connection != null) connection.close(); } catch (Exception e) {}
+        try { if (inputStream != null) { inputStream.close(); inputStream = null; } } catch (Exception e) {}
+        try { if (outputStream != null) { outputStream.close(); outputStream = null; } } catch (Exception e) {}
+        try { if (connection != null) { connection.close(); connection = null; } } catch (Exception e) {}
         
         if (running) {
             connectionManager.onDisconnected();
         }
     }
     
+    public void forceDisconnect() {
+        cleanupConnection();
+    }
+    
     public void stopServer() {
         running = false;
         cleanupConnection();
-        try { if (notifier != null) notifier.close(); } catch (Exception e) {}
+        try { if (notifier != null) { notifier.close(); notifier = null; } } catch (Exception e) {}
     }
     
     public boolean isConnected() {
@@ -112,12 +114,10 @@ public class BluetoothServer extends Thread {
     public void send(String data) {
         try {
             if (outputStream != null) {
-                LogManager.log("TX", data.trim());
                 outputStream.write(data.getBytes());
                 outputStream.flush();
             }
         } catch (IOException e) {
-            LogManager.error("BT_TX_ERR", e.getMessage());
             cleanupConnection();
         }
     }

@@ -22,32 +22,30 @@ public class SmartBridgeScreen extends MainScreen {
         super(MainScreen.NO_VERTICAL_SCROLL | MainScreen.NO_HORIZONTAL_SCROLL);
         this.app = application;
         
-        // Pitch Black Background for OLED/LCD efficiency
         getMainManager().setBackground(BackgroundFactory.createSolidBackground(Color.BLACK));
         
-        // --- HEADER: CLOCK & STATUS ---
         VerticalFieldManager header = new VerticalFieldManager(Field.FIELD_HCENTER);
-        header.setPadding(20, 0, 10, 0); 
+        header.setPadding(10, 0, 5, 0); 
         
         clockLabel = new DarkLabelField("--:--", Field.FIELD_HCENTER, Color.WHITE);
         try {
-            clockLabel.setFont(Font.getDefault().derive(Font.BOLD, 75));
+            clockLabel.setFont(Font.getDefault().derive(Font.BOLD, 70));
         } catch (Exception e) {}
         
         dateLabel = new DarkLabelField("---", Field.FIELD_HCENTER, 0xAAAAAA);
-        try { dateLabel.setFont(Font.getDefault().derive(Font.PLAIN, 22)); } catch(Exception e){}
+        try { dateLabel.setFont(Font.getDefault().derive(Font.PLAIN, 20)); } catch(Exception e){}
         
         header.add(clockLabel);
         header.add(dateLabel);
         
         HorizontalFieldManager statusContainer = new HorizontalFieldManager(Field.FIELD_HCENTER);
-        statusContainer.setPadding(10, 0, 30, 0);
+        statusContainer.setPadding(5, 0, 15, 0);
         
         btStatusLabel = new DarkLabelField("[BT: WAIT] ", 0xFF0000); 
         batteryLabel = new DarkLabelField("[AND: --%] [BB: --%]", 0xAAAAAA);
         
         try {
-            Font smallFont = Font.getDefault().derive(Font.PLAIN, 16);
+            Font smallFont = Font.getDefault().derive(Font.PLAIN, 14);
             btStatusLabel.setFont(smallFont);
             batteryLabel.setFont(smallFont);
         } catch (Exception e) {}
@@ -58,11 +56,11 @@ public class SmartBridgeScreen extends MainScreen {
         
         add(header);
         
-        // --- 3x2 LAUNCHER GRID ---
+        // --- 3x3 LAUNCHER GRID ---
         VerticalFieldManager grid = new VerticalFieldManager(Field.FIELD_HCENTER);
         
         int btnW = 145; // 3 * 145 = 435px (centered perfectly inside 480px width)
-        int btnH = 55;
+        int btnH = 45; // Smaller height to fit 3 rows in 360px screen
         
         // Row 1
         HorizontalFieldManager row1 = new HorizontalFieldManager(Field.FIELD_HCENTER);
@@ -88,6 +86,28 @@ public class SmartBridgeScreen extends MainScreen {
         
         // Row 2
         HorizontalFieldManager row2 = new HorizontalFieldManager(Field.FIELD_HCENTER);
+        DarkButtonField btnWA = new DarkButtonField("WhatsApp", btnW, btnH);
+        btnWA.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) { app.getConnectionManager().sendData("OPEN_APP|WhatsApp\n"); }
+        });
+
+        DarkButtonField btnFB = new DarkButtonField("Messenger", btnW, btnH);
+        btnFB.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) { app.getConnectionManager().sendData("OPEN_APP|Messenger\n"); }
+        });
+        
+        DarkButtonField btnTG = new DarkButtonField("Telegram", btnW, btnH);
+        btnTG.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) { app.getConnectionManager().sendData("OPEN_APP|Telegram\n"); }
+        });
+        
+        row2.add(btnWA);
+        row2.add(btnFB);
+        row2.add(btnTG);
+        grid.add(row2);
+        
+        // Row 3
+        HorizontalFieldManager row3 = new HorizontalFieldManager(Field.FIELD_HCENTER);
         DarkButtonField btnContacts = new DarkButtonField("Contacts", btnW, btnH);
         btnContacts.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) { app.getUIManager().openContacts(); }
@@ -103,14 +123,13 @@ public class SmartBridgeScreen extends MainScreen {
             public void fieldChanged(Field field, int context) { app.getUIManager().openSettings(); }
         });
         
-        row2.add(btnContacts);
-        row2.add(btnMusic);
-        row2.add(btnSettings);
-        grid.add(row2);
+        row3.add(btnContacts);
+        row3.add(btnMusic);
+        row3.add(btnSettings);
+        grid.add(row3);
         
         add(grid);
         
-        // --- START TIMERS ---
         updateTimeAndBBBattery();
         
         uiTimer = new Timer();
@@ -120,7 +139,7 @@ public class SmartBridgeScreen extends MainScreen {
                     public void run() { updateTimeAndBBBattery(); }
                 });
             }
-        }, 0, 10000); // Update every 10s
+        }, 0, 10000); 
     }
     
     private void updateTimeAndBBBattery() {
@@ -149,10 +168,10 @@ public class SmartBridgeScreen extends MainScreen {
     public void updateConnectionStatus(String status) {
         if (status.equals("CONNECTED")) {
             btStatusLabel.setText("[BT: ON] ");
-            btStatusLabel.setColor(0x00FF00); // Green
+            btStatusLabel.setColor(0x00FF00); 
         } else {
             btStatusLabel.setText("[BT: WAIT] ");
-            btStatusLabel.setColor(0xFF0000); // Red
+            btStatusLabel.setColor(0xFF0000); 
         }
     }
 
@@ -172,7 +191,6 @@ public class SmartBridgeScreen extends MainScreen {
     }
     
     public void addLog(String log) {
-        // Disabled to preserve minimal Smartwatch aesthetic
     }
     
     protected boolean keyDown(int keycode, int time) {

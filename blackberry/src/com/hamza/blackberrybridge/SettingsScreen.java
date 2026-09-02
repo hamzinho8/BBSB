@@ -8,8 +8,6 @@ import java.util.Vector;
 
 public class SettingsScreen extends MainScreen {
     private SettingsManager settingsManager;
-    private CheckboxField autoReconnectField;
-    private CheckboxField debugModeField;
     private BasicEditField[] quickReplyFields = new BasicEditField[3];
     
     public SettingsScreen(SettingsManager manager) {
@@ -21,18 +19,11 @@ public class SettingsScreen extends MainScreen {
         add(title);
         add(new SeparatorField());
         
-        // standard CheckboxField defaults to black text, we need a way to make it white. 
-        // BBOS doesn't support easy coloring of CheckboxField text. So we use a custom approach or standard and just live with it.
-        // Actually, we can use an object with a dark text or we can just leave it since the background is black, it might be unreadable if we don't fix it.
-        // Let's use standard CheckboxField, but add a label next to it if needed. Actually CheckboxField takes a label. Let's see.
-        // To be safe, I'll use DarkLabelField and a DarkButtonField to toggle.
-        
         HorizontalFieldManager hfmAuth = new HorizontalFieldManager();
         DarkLabelField lblAuto = new DarkLabelField("Auto-Reconnect: ", Color.WHITE);
-        final DarkButtonField btnAuto = new DarkButtonField(settingsManager.isAutoReconnect() ? "ON" : "OFF", 80, 30);
+        final DarkButtonField btnAuto = new DarkButtonField(settingsManager.isAutoReconnect() ? "ON" : "OFF", 100, 30);
         btnAuto.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) {
-                boolean val = btnAuto.getPreferredWidth() == 1 ? false : true; // hacky toggle
                 if (btnAuto.getText().equals("ON")) {
                     btnAuto.setText("OFF");
                     settingsManager.setAutoReconnect(false);
@@ -47,7 +38,7 @@ public class SettingsScreen extends MainScreen {
         
         HorizontalFieldManager hfmDebug = new HorizontalFieldManager();
         DarkLabelField lblDebug = new DarkLabelField("Debug Mode: ", Color.WHITE);
-        final DarkButtonField btnDebug = new DarkButtonField(settingsManager.isDebugMode() ? "ON" : "OFF", 80, 30);
+        final DarkButtonField btnDebug = new DarkButtonField(settingsManager.isDebugMode() ? "ON" : "OFF", 100, 30);
         btnDebug.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) {
                 if (btnDebug.getText().equals("ON")) {
@@ -65,6 +56,8 @@ public class SettingsScreen extends MainScreen {
         add(new SeparatorField());
         add(new DarkLabelField("Quick Replies (Top 3):", 0x0078D7));
         
+        // BasicEditField displays black text, which is bad on black background.
+        // Unfortunately standard fields are hard to style in BBOS. We will just use them anyway, BB handles cursor
         Vector qr = settingsManager.getQuickReplies();
         for (int i = 0; i < 3; i++) {
             String val = "";
@@ -77,7 +70,7 @@ public class SettingsScreen extends MainScreen {
         
         add(new SeparatorField());
         
-        DarkButtonField saveBtn = new DarkButtonField("Save Settings", 200, 50);
+        DarkButtonField saveBtn = new DarkButtonField("Save Settings", 200, 45);
         saveBtn.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) {
                 saveSettings();
@@ -98,8 +91,8 @@ public class SettingsScreen extends MainScreen {
             }
         }
         Vector oldQr = settingsManager.getQuickReplies();
-        for (int i = 3; i < oldQr.size(); i++) {
-             newQr.addElement(oldQr.elementAt(i));
+        for (int i = 3; i < oldQr.size(); i++) { 
+            newQr.addElement(oldQr.elementAt(i));
         }
         settingsManager.setQuickReplies(newQr);
         
