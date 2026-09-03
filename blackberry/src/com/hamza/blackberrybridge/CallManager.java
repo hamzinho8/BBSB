@@ -3,7 +3,7 @@ package com.hamza.blackberrybridge;
 public class CallManager {
     private UIManager uiManager;
     private SmartBridgeApp app;
-    private CallScreen currentCallScreen;
+    private CallScreen activeCallScreen;
     
     public CallManager(UIManager uiManager, SmartBridgeApp app) {
         this.uiManager = uiManager;
@@ -11,44 +11,50 @@ public class CallManager {
     }
     
     public void handleIncomingCall(String id, String name, String number) {
-        HardwareManager.triggerCallAlert();
-        currentCallScreen = new CallScreen(this, id, name, number);
-        uiManager.pushScreen(currentCallScreen);
+        HardwareManager.triggerCallAlert(app);
+        app.getAudioManager().playCallRingtone();
+        
+        activeCallScreen = new CallScreen(this, id, name, number);
+        uiManager.pushScreen(activeCallScreen);
     }
     
     public void handleCallActive(String id) {
-        if (currentCallScreen != null) {
-            currentCallScreen.setStatus("Active");
-            HardwareManager.stopAlerts();
+        HardwareManager.stopAlerts();
+        app.getAudioManager().stopCallRingtone();
+        if (activeCallScreen != null) {
+            activeCallScreen.setStatus("Active");
         }
     }
     
     public void handleCallEnd(String id) {
         HardwareManager.stopAlerts();
-        if (currentCallScreen != null) {
-            currentCallScreen.close();
-            currentCallScreen = null;
+        app.getAudioManager().stopCallRingtone();
+        if (activeCallScreen != null) {
+            activeCallScreen.close();
+            activeCallScreen = null;
         }
     }
     
     public void handleCallMissed(String id, String name, String number) {
         HardwareManager.stopAlerts();
-        if (currentCallScreen != null) {
-            currentCallScreen.close();
-            currentCallScreen = null;
+        app.getAudioManager().stopCallRingtone();
+        if (activeCallScreen != null) {
+            activeCallScreen.close();
+            activeCallScreen = null;
         }
-        LogManager.log("CALL", "Missed call from " + name);
+        
+        app.getNotificationManager().handleNotification("missed_" + id, "Phone", name, "Missed call from " + number);
     }
     
     public void answerCall(String id) {
+        app.getAudioManager().stopCallRingtone();
+        HardwareManager.stopAlerts();
         app.getConnectionManager().sendData("CALL_ANSWER|" + id + "\n");
     }
     
     public void rejectCall(String id) {
+        app.getAudioManager().stopCallRingtone();
+        HardwareManager.stopAlerts();
         app.getConnectionManager().sendData("CALL_REJECT|" + id + "\n");
-    }
-    
-    public void initiateCall(String number) {
-        app.getConnectionManager().sendData("CALL|" + number + "\n");
     }
 }

@@ -75,6 +75,18 @@ public class SettingsScreen extends MainScreen {
         
         add(new SeparatorField());
         
+        DarkButtonField btnSoundMenu = new DarkButtonField("Sound & Alerts...", 200, 40);
+        btnSoundMenu.setChangeListener(new FieldChangeListener() {
+            public void fieldChanged(Field field, int context) {
+                app.getUIManager().pushScreen(new SoundSettingsScreen(app));
+            }
+        });
+        HorizontalFieldManager hfmSound = new HorizontalFieldManager(Field.FIELD_HCENTER);
+        hfmSound.add(btnSoundMenu);
+        add(hfmSound);
+        
+        add(new SeparatorField());
+        
         HorizontalFieldManager hfmActions = new HorizontalFieldManager(Field.FIELD_HCENTER);
         DarkButtonField btnFindPhone = new DarkButtonField("Find Phone", 130, 40);
         btnFindPhone.setChangeListener(new FieldChangeListener() {

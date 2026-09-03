@@ -5,7 +5,6 @@ Vendor=Hamza
 Description=Android Bluetooth Companion for BlackBerry
 Type=0
 RibbonPosition=0
-
 [Files]
 src\com\hamza\blackberrybridge\BluetoothManager.java
 src\com\hamza\blackberrybridge\BluetoothServer.java
@@ -30,3 +29,5 @@ src\com\hamza\blackberrybridge\SmartBridgeScreen.java
 src\com\hamza\blackberrybridge\UIManager.java
 src\com\hamza\blackberrybridge\DarkButtonField.java
 src\com\hamza\blackberrybridge\DarkLabelField.java
+src\com\hamza\blackberrybridge\AudioManager.java
+src\com\hamza\blackberrybridge\SoundSettingsScreen.java

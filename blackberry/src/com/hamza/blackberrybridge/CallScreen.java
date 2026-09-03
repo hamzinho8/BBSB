@@ -18,18 +18,20 @@ public class CallScreen extends MainScreen {
         
         getMainManager().setBackground(BackgroundFactory.createSolidBackground(Color.BLACK));
         
-        VerticalFieldManager vfm = new VerticalFieldManager(Field.FIELD_HCENTER | Field.FIELD_VCENTER);
-        vfm.setPadding(20, 0, 0, 0);
+        VerticalFieldManager vfm = new VerticalFieldManager(Field.FIELD_HCENTER | Field.USE_ALL_HEIGHT);
+        vfm.setPadding(30, 0, 0, 0);
         
-        DarkLabelField title = new DarkLabelField("Incoming Call", Field.FIELD_HCENTER, 0x00FF00);
-        try { title.setFont(Font.getDefault().derive(Font.BOLD, 30)); } catch(Exception e){}
+        DarkLabelField title = new DarkLabelField("Incoming Call", Field.FIELD_HCENTER, 0x00FF00); // Green title
+        try { title.setFont(Font.getDefault().derive(Font.BOLD, 22)); } catch(Exception e){}
         
-        DarkLabelField nameLabel = new DarkLabelField(name, Field.FIELD_HCENTER, Color.WHITE);
-        try { nameLabel.setFont(Font.getDefault().derive(Font.BOLD, 40)); } catch(Exception e){}
+        DarkLabelField nameLabel = new DarkLabelField(name != null && name.length() > 0 ? name : "Unknown Caller", Field.FIELD_HCENTER, Color.WHITE);
+        try { nameLabel.setFont(Font.getDefault().derive(Font.BOLD, 45)); } catch(Exception e){}
         
-        DarkLabelField numberLabel = new DarkLabelField(number, Field.FIELD_HCENTER, 0xAAAAAA);
+        DarkLabelField numberLabel = new DarkLabelField(number != null ? number : "", Field.FIELD_HCENTER, 0xAAAAAA);
+        try { numberLabel.setFont(Font.getDefault().derive(Font.PLAIN, 24)); } catch(Exception e){}
         
-        statusLabel = new DarkLabelField("Status: Ringing...", Field.FIELD_HCENTER, 0xFFCC00);
+        statusLabel = new DarkLabelField("Ringing...", Field.FIELD_HCENTER, 0xFFCC00);
+        try { statusLabel.setFont(Font.getDefault().derive(Font.PLAIN, 20)); } catch(Exception e){}
         
         vfm.add(title);
         vfm.add(new SeparatorField());
@@ -37,32 +39,50 @@ public class CallScreen extends MainScreen {
         vfm.add(numberLabel);
         vfm.add(new SeparatorField());
         vfm.add(statusLabel);
-        add(vfm);
+        
+        // Spacer
+        VerticalFieldManager spacer = new VerticalFieldManager();
+        spacer.setPadding(30, 0, 0, 0);
+        vfm.add(spacer);
         
         HorizontalFieldManager hfm = new HorizontalFieldManager(Field.FIELD_HCENTER);
-        hfm.setPadding(40, 0, 0, 0);
         
-        DarkButtonField btnAnswer = new DarkButtonField("Answer", 150, 60);
+        CallButtonField btnAnswer = new CallButtonField("ANSWER", 0x009900, 0x00FF00, 150, 60);
         btnAnswer.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) { answer(); }
         });
         
-        DarkButtonField btnReject = new DarkButtonField("Reject", 150, 60);
+        CallButtonField btnReject = new CallButtonField("REJECT", 0xCC0000, 0xFF3333, 150, 60);
         btnReject.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) { reject(); }
         });
         
+        HorizontalFieldManager btnSpacing = new HorizontalFieldManager();
+        btnSpacing.setPadding(0, 10, 0, 10);
+        
         hfm.add(btnAnswer);
+        hfm.add(btnSpacing);
         hfm.add(btnReject);
-        add(hfm);
+        
+        vfm.add(hfm);
+        
+        DarkLabelField hintLabel = new DarkLabelField("(Use Physical Green/Red Keys)", Field.FIELD_HCENTER, 0x555555);
+        try { hintLabel.setFont(Font.getDefault().derive(Font.PLAIN, 16)); } catch(Exception e){}
+        VerticalFieldManager hintSpacer = new VerticalFieldManager(Field.FIELD_HCENTER);
+        hintSpacer.setPadding(15, 0, 0, 0);
+        hintSpacer.add(hintLabel);
+        vfm.add(hintSpacer);
+        
+        add(vfm);
     }
     
     public void setStatus(final String status) {
         Application.getApplication().invokeLater(new Runnable() {
             public void run() {
-                statusLabel.setText("Status: " + status);
+                statusLabel.setText(status);
                 if (status.equals("Active")) {
                     statusLabel.setColor(0x00FF00); // Green
+                    statusLabel.setText("Active - In Call");
                 }
             }
         });
@@ -82,13 +102,79 @@ public class CallScreen extends MainScreen {
     
     protected boolean keyDown(int keycode, int time) {
         int key = Keypad.key(keycode);
-        if (key == Keypad.KEY_SEND) { // Green key
+        if (key == Keypad.KEY_SEND) { // Physical Green key
             answer();
             return true;
-        } else if (key == Keypad.KEY_END) { // Red key
+        } else if (key == Keypad.KEY_END) { // Physical Red key
             reject();
             return true;
         }
         return super.keyDown(keycode, time);
+    }
+    
+    // --- Custom UI Component for Colored Buttons ---
+    private class CallButtonField extends Field {
+        private String label;
+        private int bgColor;
+        private int focusColor;
+        private int fontColor = Color.WHITE;
+        private int width, height;
+
+        public CallButtonField(String label, int bgColor, int focusColor, int width, int height) {
+            super(FOCUSABLE);
+            this.label = label;
+            this.bgColor = bgColor;
+            this.focusColor = focusColor;
+            this.width = width;
+            this.height = height;
+        }
+        
+        public int getPreferredWidth() { return width; }
+        public int getPreferredHeight() { return height; }
+        
+        protected void layout(int width, int height) {
+            setExtent(getPreferredWidth(), getPreferredHeight());
+        }
+        
+        protected void paint(Graphics graphics) {
+            boolean focused = isFocus();
+            graphics.setColor(focused ? focusColor : bgColor);
+            graphics.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20); 
+            
+            // Draw a subtle inner border for style
+            graphics.setColor(0xFFFFFF); 
+            // setGlobalAlpha doesn't exist in all JDE 7.1 graphics, fallback to standard drawing if needed.
+            // Let's avoid setGlobalAlpha to be safe and just draw a simple border.
+            // graphics.setGlobalAlpha(50);
+            graphics.drawRoundRect(2, 2, getWidth()-4, getHeight()-4, 18, 18);
+            // graphics.setGlobalAlpha(255);
+            
+            graphics.setColor(focused ? Color.BLACK : fontColor);
+            Font f = graphics.getFont();
+            try { f = Font.getDefault().derive(Font.BOLD, 20); graphics.setFont(f); } catch(Exception e){}
+            int tx = (getWidth() - f.getAdvance(label)) / 2;
+            int ty = (getHeight() - f.getHeight()) / 2;
+            graphics.drawText(label, tx, ty);
+        }
+        
+        protected boolean navigationClick(int status, int time) {
+            fieldChangeNotify(0);
+            return true;
+        }
+        
+        protected boolean invokeAction(int action) {
+            switch(action) {
+                case ACTION_INVOKE: { fieldChangeNotify(0); return true; }
+            }
+            return super.invokeAction(action);
+        }
+        
+        protected boolean touchEvent(net.rim.device.api.ui.TouchEvent message) {
+            if(message.getEvent() == net.rim.device.api.ui.TouchEvent.CLICK) {
+                fieldChangeNotify(0);
+                return true;
+            }
+            return super.touchEvent(message);
+        }
     }
 }

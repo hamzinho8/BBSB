@@ -5,47 +5,54 @@ import net.rim.device.api.ui.UiApplication;
 public class SmartBridgeApp extends UiApplication {
     private UIManager uiManager;
     private ConnectionManager connectionManager;
-    private SettingsManager settingsManager;
-    private NotificationManager notificationManager;
     private CallManager callManager;
+    private NotificationManager notificationManager;
     private ContactManager contactManager;
     private MediaManager mediaManager;
-    
+    private SettingsManager settingsManager;
+    private AudioManager audioManager;
+
     public static void main(String[] args) {
         SmartBridgeApp app = new SmartBridgeApp();
         app.enterEventDispatcher();
     }
-    
+
     public SmartBridgeApp() {
-        LogManager.log("App", "Starting BlackBerrySmartBridge...");
-        
+        LogManager.init();
         settingsManager = new SettingsManager();
-        uiManager = new UIManager(this);
         
-        notificationManager = new NotificationManager(uiManager, this);
+        LogManager.setDebugEnabled(settingsManager.isDebugMode());
+        LogManager.info("APP", "Starting SmartBridge");
+        
+        uiManager = new UIManager(this);
+        audioManager = new AudioManager(this);
+        connectionManager = new ConnectionManager(this);
         callManager = new CallManager(uiManager, this);
-        contactManager = new ContactManager(this);
+        notificationManager = new NotificationManager(uiManager, this);
+        contactManager = new ContactManager(uiManager);
         mediaManager = new MediaManager(this);
         
         pushScreen(uiManager.getMainScreen());
         
-        connectionManager = new ConnectionManager(uiManager, this);
-        connectionManager.startServer();
+        // Auto-connect if enabled
+        if (settingsManager.isAutoReconnect()) {
+            connectionManager.startServer();
+        }
     }
-    
+
+    public UIManager getUIManager() { return uiManager; }
     public ConnectionManager getConnectionManager() { return connectionManager; }
-    public SettingsManager getSettingsManager() { return settingsManager; }
-    public NotificationManager getNotificationManager() { return notificationManager; }
     public CallManager getCallManager() { return callManager; }
+    public NotificationManager getNotificationManager() { return notificationManager; }
     public ContactManager getContactManager() { return contactManager; }
     public MediaManager getMediaManager() { return mediaManager; }
-    public UIManager getUIManager() { return uiManager; }
+    public SettingsManager getSettingsManager() { return settingsManager; }
+    public AudioManager getAudioManager() { return audioManager; }
     
     protected void onExit() {
-        LogManager.log("App", "Shutting down...");
-        if (connectionManager != null) {
-            connectionManager.stopServer();
-        }
-        HardwareManager.stopAlerts();
+        LogManager.info("APP", "Exiting");
+        if (audioManager != null) audioManager.stopCallRingtone();
+        connectionManager.stopServer();
+        super.onExit();
     }
 }
