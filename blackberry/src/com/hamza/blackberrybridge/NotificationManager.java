@@ -34,10 +34,21 @@ public class NotificationManager {
     
     public void openNotification(Notification n) {
         HardwareManager.stopAlerts();
-        uiManager.pushScreen(new NotificationDetailScreen(this, n));
+        uiManager.pushScreen(new NotificationDetailScreen(this, n, app));
     }
     
     public void replyToNotification(String id, String text) {
         app.getConnectionManager().sendData("REPLY|" + id + "|" + text + "\n");
+    }
+    
+    public void replyToNotificationVoice(String id, byte[] audioData) {
+        try {
+            // Encode AMR binary data to Base64 to send safely over text-based SPP
+            String encoded = net.rim.device.api.io.Base64OutputStream.encodeAsString(audioData, 0, audioData.length, false, false);
+            // Send VOICE_REPLY command with the base64 payload
+            app.getConnectionManager().sendData("VOICE_REPLY|" + id + "|" + encoded + "\n");
+        } catch (Exception e) {
+            LogManager.error("VOICE", "Failed to encode voice: " + e.getMessage());
+        }
     }
 }

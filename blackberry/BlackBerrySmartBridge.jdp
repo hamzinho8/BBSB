@@ -31,3 +31,4 @@ src\com\hamza\blackberrybridge\DarkButtonField.java
 src\com\hamza\blackberrybridge\DarkLabelField.java
 src\com\hamza\blackberrybridge\AudioManager.java
 src\com\hamza\blackberrybridge\SoundSettingsScreen.java
+src\com\hamza\blackberrybridge\VoiceRecorder.java

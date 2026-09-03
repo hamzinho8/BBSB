@@ -9,13 +9,19 @@ import java.util.Vector;
 public class NotificationDetailScreen extends MainScreen {
     private NotificationManager notifManager;
     private Notification notification;
-    private BasicEditField replyField;
+    private AutoTextEditField replyField;
     private SmartBridgeApp app;
+    private VoiceRecorder voiceRecorder;
     
-    public NotificationDetailScreen(NotificationManager nm, Notification notif, SmartBridgeApp app) {
+    private DarkButtonField btnRecordVoice;
+    private DarkLabelField recordingLabel;
+    
+    public NotificationDetailScreen(NotificationManager nm, Notification notif, SmartBridgeApp application) {
+        super(MainScreen.DEFAULT_MENU | MainScreen.DEFAULT_CLOSE);
         this.notifManager = nm;
         this.notification = notif;
-        this.app = app;
+        this.app = application;
+        this.voiceRecorder = new VoiceRecorder();
         
         getMainManager().setBackground(BackgroundFactory.createSolidBackground(Color.BLACK));
         
@@ -33,30 +39,31 @@ public class NotificationDetailScreen extends MainScreen {
         
         add(new SeparatorField());
         
-        replyField = new BasicEditField("Reply: ", "", 256, BasicEditField.DEFAULT_KEYBOARD_LAYOUT);
+        // Use AutoTextEditField for Full T9/QWERTY native BlackBerry experience
+        replyField = new AutoTextEditField("Reply: ", "");
         add(replyField);
         
         HorizontalFieldManager actionsRow = new HorizontalFieldManager(Field.FIELD_HCENTER);
-        DarkButtonField btnSend = new DarkButtonField("Send", 100, 40);
+        DarkButtonField btnSend = new DarkButtonField("Send Text", 130, 40);
         btnSend.setChangeListener(new FieldChangeListener() {
-            public void fieldChanged(Field field, int context) { sendReply(); }
+            public void fieldChanged(Field field, int context) { sendTextReply(); }
         });
-        DarkButtonField btnDismiss = new DarkButtonField("Dismiss", 100, 40);
-        btnDismiss.setChangeListener(new FieldChangeListener() {
+        
+        btnRecordVoice = new DarkButtonField("🎤 Hold to Record", 160, 40);
+        
+        // Advanced Touch/Click handling for Voice Note (Push to talk style or Click to toggle)
+        btnRecordVoice.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) {
-                app.getConnectionManager().sendData("NOTIFICATION_ACTION|" + notification.id + "|DISMISS\n");
-                close();
+                toggleVoiceRecording();
             }
         });
-        DarkButtonField btnOpen = new DarkButtonField("Open", 100, 40);
-        btnOpen.setChangeListener(new FieldChangeListener() {
-            public void fieldChanged(Field field, int context) {
-                app.getConnectionManager().sendData("NOTIFICATION_ACTION|" + notification.id + "|OPEN\n");
-                close();
-            }
-        });
-        actionsRow.add(btnSend); actionsRow.add(btnDismiss); actionsRow.add(btnOpen);
+        
+        actionsRow.add(btnSend);
+        actionsRow.add(btnRecordVoice);
         add(actionsRow);
+        
+        recordingLabel = new DarkLabelField("", Field.FIELD_HCENTER, 0xFF0000);
+        add(recordingLabel);
         
         add(new SeparatorField());
         DarkLabelField qrTitle = new DarkLabelField("Quick Replies:", 0x0078D7);
@@ -83,7 +90,7 @@ public class NotificationDetailScreen extends MainScreen {
         app.getConnectionManager().sendData("NOTIFICATION_ACTION|" + notification.id + "|MARK_READ\n");
     }
     
-    private void sendReply() {
+    private void sendTextReply() {
         String text = replyField.getText();
         if (text != null && text.length() > 0) {
             notifManager.replyToNotification(notification.id, text);
@@ -91,9 +98,36 @@ public class NotificationDetailScreen extends MainScreen {
         }
     }
     
+    private void toggleVoiceRecording() {
+        if (!voiceRecorder.isRecording()) {
+            try {
+                voiceRecorder.startRecording();
+                btnRecordVoice.setText("🛑 Stop & Send");
+                recordingLabel.setText("Recording Audio...");
+            } catch (Exception e) {
+                LogManager.error("VOICE", "Failed to start: " + e.getMessage());
+                recordingLabel.setText("Failed to access Mic");
+            }
+        } else {
+            byte[] audioData = voiceRecorder.stopRecording();
+            btnRecordVoice.setText("🎤 Hold to Record");
+            recordingLabel.setText("Sending Audio...");
+            
+            if (audioData != null && audioData.length > 0) {
+                notifManager.replyToNotificationVoice(notification.id, audioData);
+                close();
+            } else {
+                recordingLabel.setText("Audio too short or failed.");
+            }
+        }
+    }
+    
     protected boolean keyDown(int keycode, int time) {
         int key = Keypad.key(keycode);
         if (key == Keypad.KEY_END || key == Keypad.KEY_ESCAPE) { 
+            if (voiceRecorder.isRecording()) {
+                voiceRecorder.stopRecording();
+            }
             close();
             return true;
         }
