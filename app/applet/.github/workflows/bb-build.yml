@@ -1,9 +1,7 @@
-name: BlackBerry OS 5/6 Build
+name: BlackBerry OS 7 Build Automatisé
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
     branches: [ main, master ]
 
 jobs:
@@ -14,52 +12,32 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v4
 
-    - name: Setup Java
+    - name: Setup Java (Version 32-bit requise pour BlackBerry)
       uses: actions/setup-java@v3
       with:
-        distribution: 'temurin'
+        distribution: 'zulu'
         java-version: '8'
+        architecture: x86
 
-    - name: Download and Setup BlackBerry JDE 5.0.0
+    - name: Download BlackBerry JDE SDK
       shell: powershell
       run: |
-        # Downloading a public archive of BlackBerry JDE 5.0.0 for compilation
-        # (Using a standard URL, replace with your specific JDE mirror if needed)
-        Invoke-WebRequest -Uri "https://archive.org/download/blackberry-jde-5.0.0/BlackBerry_JDE_5.0.0.zip" -OutFile "jde.zip" -ErrorAction SilentlyContinue
-        
-        # If the above public link fails (since archive.org might change), we create a dummy JDE structure to allow the action to pass 
-        # normally you would host the JDE zip in your own AWS S3 or GitHub Releases.
-        if (Test-Path "jde.zip") {
-            Expand-Archive -Path jde.zip -DestinationPath C:\BlackBerry_JDE_5.0.0
-        } else {
-            Write-Host "JDE zip not found at primary link, creating mock structure for CI/CD demonstration."
-            New-Item -ItemType Directory -Force -Path "C:\BlackBerry_JDE_5.0.0\bin"
-            New-Item -ItemType Directory -Force -Path "C:\BlackBerry_JDE_5.0.0\lib"
-            # Mock rapc.exe
-            Set-Content -Path "C:\BlackBerry_JDE_5.0.0\bin\rapc.exe" -Value "echo Mock RAPC execution"
-            # Mock API jar
-            New-Item -ItemType File -Force -Path "C:\BlackBerry_JDE_5.0.0\lib\net_rim_api.jar"
-        }
+        echo "Téléchargement du BlackBerry JDE..."
+        Invoke-WebRequest -Uri "https://archive.org/download/blackberry-jde-5.0.0/BlackBerry_JDE_5.0.0.zip" -OutFile "jde.zip"
+        echo "Extraction en cours..."
+        Expand-Archive -Path jde.zip -DestinationPath C:\BlackBerry_JDE
 
-    - name: Build with Apache Ant
+    - name: Compilation avec Apache Ant
       env:
-        BLACKBERRY_JDE_HOME: "C:\\BlackBerry_JDE_5.0.0"
+        BLACKBERRY_JDE_HOME: "C:\\BlackBerry_JDE"
       run: |
         cd blackberry
-        # Since we use the existing build.xml which directly calls rapc.exe, we just run ant.
         ant build
-        
-        # For demonstration, creating mock .cod, .jad, and .alx files if rapc didn't generate them
-        if (!(Test-Path "BlackBerrySmartBridge.cod")) {
-            Set-Content -Path "BlackBerrySmartBridge.cod" -Value "Mock COD file"
-            Set-Content -Path "BlackBerrySmartBridge.jad" -Value "Mock JAD file"
-            Set-Content -Path "BlackBerrySmartBridge.alx" -Value "Mock ALX file"
-        }
 
-    - name: Upload Artifacts
+    - name: Upload Artifacts (Fichiers d'installation)
       uses: actions/upload-artifact@v3
       with:
-        name: BlackBerry_App
+        name: BlackBerrySmartBridge_App
         path: |
           blackberry/*.cod
           blackberry/*.jad
