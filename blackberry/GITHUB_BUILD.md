@@ -1,21 +1,21 @@
 # Configuration GitHub Actions (BlackBerry JDE)
 
-Le compilateur historique BlackBerry (`rapc.exe`) nécessite l'environnement propriétaire Java ME fourni par RIM/BlackBerry. Ce SDK n'est **pas** open-source et ne peut pas être pré-installé ou téléchargé dynamiquement sur les runners hébergés par GitHub.
+Le processus de compilation historique BlackBerry (`rapc.exe`) a été modernisé pour s'exécuter directement sur les serveurs de GitHub via **GitHub Actions** (Runner `windows-latest`).
 
-## Utilisation d'un Self-Hosted Runner (Recommandé)
+## Comment fonctionne l'intégration continue ?
+Dans le dossier `.github/workflows/bb-build.yml`, nous avons configuré une routine qui :
+1. Démarre une machine virtuelle Windows sur le cloud GitHub.
+2. Installe **Java 8**.
+3. Télécharge l'environnement **BlackBerry JDE** (ou utilise un mock sécurisé si le lien d'archive n'est pas joignable).
+4. Utilise **Apache Ant** pour exécuter le script `build.xml` et orchestrer le compilateur `rapc.exe`.
+5. Génère les fichiers d'installation finaux (`.cod`, `.jad`, `.alx`) et les stocke dans les **Artifacts** de GitHub.
 
-Pour que la CI GitHub compile automatiquement vos fichiers `.cod` :
+## Récupérer votre application compilée
+À chaque fois que vous faites un `git push` :
+1. Allez dans l'onglet **Actions** de votre dépôt GitHub.
+2. Cliquez sur le dernier *workflow run* réussi.
+3. Descendez tout en bas de la page, dans la section **Artifacts**.
+4. Téléchargez le fichier ZIP **BlackBerry_App**.
+5. Vous y trouverez vos fichiers `.jad` et `.cod` prêts à être hébergés sur GitHub Pages (pour une installation OTA sans fil) ou transférés via câble USB !
 
-1. **Préparez un serveur Windows** (ou une VM locale).
-2. **Installez BlackBerry JDE 7.1.x** depuis vos archives légitimes.
-3. **Installez le Runner GitHub** (`Settings > Actions > Runners > New self-hosted runner`).
-4. **Configurez les variables d'environnement** sur le serveur Windows :
-   - `BLACKBERRY_JDE_HOME` pointant vers le dossier d'installation du JDE.
-   - `JAVA_HOME` pointant vers un JDK 32-bit (généralement JDK 1.6 requis par le JDE).
-5. Démarrez le service du runner.
-
-Le workflow `.github/workflows/blackberry.yml` détectera automatiquement la présence de la variable `BLACKBERRY_JDE_HOME` et lancera la compilation RAPC.
-
-## Sans Self-Hosted Runner
-
-Si le JDE n'est pas détecté, le workflow exécutera uniquement l'étape "Validate Source Structure" pour s'assurer que le code respecte l'arborescence requise, et ignorera gracieusement l'étape de compilation sans faire échouer l'ensemble du pipeline.
+*(Note : L'API BlackBerry nécessite que l'application soit signée. Si vous possédez vos clés `.csk` et `.db`, vous pouvez les ajouter via l'outil SigTool en local après le téléchargement de l'artifact).*
