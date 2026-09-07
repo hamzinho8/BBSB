@@ -3,7 +3,7 @@ name: Experimental BlackBerry OS 7 Build
 on:
   push:
     branches: [ main, master ]
-  workflow_dispatch: # Permet de lancer le workflow manuellement depuis GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -25,7 +25,6 @@ jobs:
       run: |
         Write-Host "Installation d'Apache Ant..."
         choco install ant -y --no-progress
-        # Choco ajoute automatiquement Ant au PATH, mais on s'assure que c'est bien disponible
 
     - name: 🚀 Téléchargement et Extraction Expérimentale du JDE 7.1.0
       shell: powershell
@@ -49,7 +48,6 @@ jobs:
             $fileInfo = Get-Item $exePath
             Write-Host "Fichier téléchargé avec succès. Taille : $([math]::Round($fileInfo.Length / 1MB, 2)) MB"
             
-            # Vérification basique de l'intégrité (l'installeur JDE 7.1 fait environ 300Mo)
             if ($fileInfo.Length -lt 150MB) {
                 throw "Le fichier téléchargé est trop petit, il est probablement corrompu."
             }
@@ -59,57 +57,37 @@ jobs:
         }
         
         Write-Host "`n========================================="
-        Write-Host "2. EXTRACTION EXPERIMENTALE (Multi-méthodes)"
+        Write-Host "2. EXTRACTION EXPERIMENTALE"
         Write-Host "========================================="
         
         $msiFound = $false
         
-        Write-Host "-> Méthode A : Extraction InstallShield native (/s /x)"
+        Write-Host "-> Extraction InstallShield native (/s /x)"
         try {
             $process = Start-Process -FilePath $exePath -ArgumentList "/s", "/x", "/b`"$extractPath`"", "/v`"/qn`"" -PassThru
-            $process.WaitForExit(120000) # Attendre max 2 minutes (120 000 ms)
+            $process.WaitForExit(120000)
             
             $msiFile = Get-ChildItem -Path $extractPath -Filter "*.msi" -Recurse | Select-Object -First 1
             if ($msiFile) {
-                Write-Host "[SUCCÈS] MSI trouvé via Méthode A : $($msiFile.FullName)"
+                Write-Host "[SUCCÈS] MSI trouvé : $($msiFile.FullName)"
                 $msiFound = $true
-            } else {
-                Write-Host "[ÉCHEC] Aucun MSI trouvé après la Méthode A."
             }
         } catch {
-            Write-Host "[ÉCHEC] Erreur lors de la Méthode A : $_"
-        }
-        
-        if (-not $msiFound) {
-            Write-Host "`n-> Méthode B : Extraction forcée via 7-Zip"
-            try {
-                # 7-Zip est préinstallé sur windows-latest
-                & 7z x $exePath -o"$extractPath\7z_extracted" -y | Out-Null
-                $msiFile = Get-ChildItem -Path "$extractPath\7z_extracted" -Filter "*.msi" -Recurse | Select-Object -First 1
-                if ($msiFile) {
-                    Write-Host "[SUCCÈS] MSI trouvé via Méthode B : $($msiFile.FullName)"
-                    $msiFound = $true
-                } else {
-                    Write-Host "[ÉCHEC] 7-Zip n'a pas pu extraire de fichier MSI."
-                }
-            } catch {
-                Write-Host "[ÉCHEC] Erreur lors de la Méthode B : $_"
-            }
+            Write-Host "[ÉCHEC] Erreur lors de l'extraction : $_"
         }
         
         if ($msiFound) {
             Write-Host "`n-> Lancement de l'Installation Administrative (Extraction pure des binaires)..."
             try {
-                # msiexec /a force l'extraction du contenu de l'MSI vers le dossier cible sans rien installer sur le système
                 $msiProcess = Start-Process -FilePath "msiexec.exe" -ArgumentList "/a", "`"$($msiFile.FullName)`"", "/qn", "TARGETDIR=`"$finalJdePath`"" -PassThru
-                $msiProcess.WaitForExit(300000) # Max 5 minutes
+                $msiProcess.WaitForExit(300000)
                 Write-Host "Extraction MSI terminée."
             } catch {
                 Write-Error "Échec de l'installation administrative MSI : $_"
                 exit 1
             }
         } else {
-            Write-Error "Toutes les méthodes d'extraction ont échoué. Impossible de récupérer le JDE."
+            Write-Error "Impossible de récupérer le fichier MSI du JDE."
             exit 1
         }
         
@@ -117,56 +95,40 @@ jobs:
         Write-Host "3. VÉRIFICATION DES OUTILS DE COMPILATION"
         Write-Host "========================================="
         
-        # Recherche récursive pour ne pas dépendre d'une structure de dossier stricte
         $rapcExe = Get-ChildItem -Path $finalJdePath -Filter "rapc.exe" -Recurse | Select-Object -First 1
         $netRimApi = Get-ChildItem -Path $finalJdePath -Filter "net_rim_api.jar" -Recurse | Select-Object -First 1
         
         if ($rapcExe -and $netRimApi) {
             Write-Host "[SUCCÈS] Tous les outils requis ont été trouvés !"
             Write-Host "- RAPC.exe : $($rapcExe.FullName)"
-            Write-Host "- NET_RIM_API.jar : $($netRimApi.FullName)"
             
-            # Définition dynamique du JDE_HOME en fonction de l'endroit où rapc.exe a été trouvé
             $jdeHome = $rapcExe.Directory.Parent.FullName
             Write-Host "`nConfiguration de BLACKBERRY_JDE_HOME=$jdeHome"
-            
-            # Injection dans l'environnement GitHub Actions pour l'étape suivante
             echo "BLACKBERRY_JDE_HOME=$jdeHome" | Out-File -FilePath $env:GITHUB_ENV -Append
         } else {
-            Write-Error "Extraction réussie mais fichiers critiques manquants !"
-            Write-Host "Contenu trouvé dans $finalJdePath :"
-            Get-ChildItem -Path $finalJdePath -Recurse | Select-Object FullName
+            Write-Error "Fichiers critiques (rapc.exe ou net_rim_api.jar) manquants dans $finalJdePath !"
             exit 1
         }
 
     - name: ⚙️ Compilation du projet BlackBerry (BBSB)
       shell: bash
       run: |
-        echo "========================================="
-        echo "4. DÉMARRAGE DE LA COMPILATION"
-        echo "========================================="
         echo "Dossier JDE actif détecté : $BLACKBERRY_JDE_HOME"
         
-        # Le script s'adapte automatiquement selon que le code est à la racine ou dans un sous-dossier "blackberry"
         if [ -d "blackberry" ] && [ -f "blackberry/build.xml" ]; then
-          echo "Dossier 'blackberry' trouvé, navigation vers le dossier source..."
           cd blackberry
         elif [ -f "build.xml" ]; then
-          echo "build.xml trouvé à la racine du projet."
+          echo "build.xml trouvé à la racine."
         else
-          echo "ERREUR CRITIQUE : Fichier build.xml introuvable dans le dépôt !"
-          ls -la
+          echo "ERREUR : Fichier build.xml introuvable !"
           exit 1
         fi
         
-        echo "Lancement de Apache Ant avec BLACKBERRY_JDE_HOME=$BLACKBERRY_JDE_HOME..."
         ant build
-        
-        echo "Compilation terminée !"
 
-    - name: 📦 Sauvegarde des artefacts générés (.cod, .jad, .alx, .jar)
+    - name: 📦 Sauvegarde des artefacts générés
       uses: actions/upload-artifact@v4
-      if: always() # Toujours s'exécuter même en cas d'échec pour permettre le debug
+      if: always()
       with:
         name: BBSB_BlackBerry_App_7.1.0
         path: |
@@ -174,4 +136,3 @@ jobs:
           **/*.jad
           **/*.alx
           **/*.jar
-        retention-days: 7
