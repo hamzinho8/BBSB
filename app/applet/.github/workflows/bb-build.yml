@@ -19,11 +19,10 @@ jobs:
         java-version: '8'
         architecture: x86
 
-    - name: Download and Install BlackBerry JDE SDK
+    - name: Download and Extract BlackBerry JDE SDK
       shell: powershell
       run: |
         echo "Téléchargement du BlackBerry JDE officiel (.exe)..."
-        # On télécharge l'exécutable officiel car le ZIP n'existe pas sur archive.org
         Invoke-WebRequest -Uri "https://archive.org/download/blackberry-jde-5.0.0/BlackBerry_JDE_5.0.0.exe" -OutFile "jde_installer.exe"
         
         echo "Extraction des fichiers d'installation (Contournement de l'installeur silencieux qui bloque)..."
@@ -44,9 +43,9 @@ jobs:
             $msiProcess = Start-Process -FilePath "msiexec.exe" -ArgumentList "/a", "`"$($msiFile.FullName)`"", "/qn", "TARGETDIR=`"C:\BlackBerry_JDE`"" -PassThru
             $msiProcess.WaitForExit()
             
-            echo "Vérification de l'installation..."
+            echo "Vérification de l'extraction..."
             if (Test-Path "C:\BlackBerry_JDE\bin\rapc.exe") {
-                echo "JDE extrait avec succès !"
+                echo "JDE extrait avec succès dans C:\BlackBerry_JDE"
             } elseif (Test-Path "C:\BlackBerry_JDE\BlackBerry JDE 5.0.0\bin\rapc.exe") {
                 echo "JDE extrait dans un sous-dossier, création d'un lien..."
                 New-Item -ItemType Junction -Path "C:\BlackBerry_JDE_Link" -Target "C:\BlackBerry_JDE\BlackBerry JDE 5.0.0" | Out-Null
@@ -63,7 +62,6 @@ jobs:
     - name: Compilation avec Apache Ant
       shell: bash
       env:
-        # On pointe vers le bon dossier selon le résultat précédent
         BLACKBERRY_JDE_HOME: "C:\\BlackBerry_JDE_Link"
       run: |
         cd blackberry
