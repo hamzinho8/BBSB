@@ -1,0 +1,89 @@
+name: BlackBerry OS 7 Build
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: ☕ Setup Java 8 (32-bit requis pour RAPC)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '8'
+        architecture: x86
+
+    - name: 🔑 Patch Registry for BlackBerry Installer
+      shell: powershell
+      run: |
+        Write-Host "Ajout des clés de registre Java pour l'installeur BlackBerry..."
+        $javaPath = $env:JAVA_HOME
+        
+        New-Item -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit\1.8" -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit\1.8" -Name "JavaHome" -Value $javaPath -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit" -Name "CurrentVersion" -Value "1.8" -Force | Out-Null
+        
+        New-Item -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit\1.8" -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit\1.8" -Name "JavaHome" -Value $javaPath -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit" -Name "CurrentVersion" -Value "1.8" -Force | Out-Null
+
+    - name: 🛠️ Setup Apache Ant
+      shell: powershell
+      run: |
+        Write-Host "Installation d'Apache Ant..."
+        choco install ant -y --no-progress
+
+    - name: 🚀 Téléchargement et Installation du JDE 7.1.0
+      shell: powershell
+      run: |
+        $url = "https://archive.org/download/blackberry-jde/BlackBerry_JDE_7.1.0.exe"
+        $exePath = "C:\BlackBerry_JDE_7.1.0.exe"
+        
+        Write-Host "Téléchargement du JDE 7.1.0..."
+        Invoke-WebRequest -Uri $url -OutFile $exePath
+        
+        Write-Host "Installation silencieuse du JDE (Veuillez patienter)..."
+        $process = Start-Process -FilePath $exePath -ArgumentList "/s", "/v`"/qn`"" -PassThru -Wait
+        
+        Write-Host "Installation terminée avec le code : $($process.ExitCode)"
+
+    - name: 🔍 Configuration du JDE
+      shell: powershell
+      run: |
+        $rapcExe = Get-ChildItem -Path "C:\Program Files (x86)\Research In Motion" -Filter "rapc.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        
+        if (-not $rapcExe) {
+            $rapcExe = Get-ChildItem -Path "C:\Program Files" -Filter "rapc.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        }
+        
+        if ($rapcExe) {
+            $jdeHome = $rapcExe.Directory.Parent.FullName
+            Write-Host "BLACKBERRY_JDE_HOME=$jdeHome" | Out-File -FilePath $env:GITHUB_ENV -Append
+        } else {
+            Write-Error "Échec : rapc.exe est introuvable."
+            exit 1
+        }
+
+    - name: ⚙️ Compilation du projet BlackBerry
+      shell: bash
+      run: |
+        # Navigation exacte vers le dossier contenant le code dans votre dépôt
+        cd app/applet/blackberry
+        ant build
+
+    - name: 📦 Sauvegarde des artefacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: BBSB_BlackBerry_App_7.1.0
+        path: |
+          app/applet/blackberry/*.cod
+          app/applet/blackberry/*.jad
+          app/applet/blackberry/*.alx
+          app/applet/blackberry/*.jar
