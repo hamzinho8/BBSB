@@ -1,0 +1,104 @@
+name: BlackBerry OS 7 Build
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: 📥 Checkout Code
+      uses: actions/checkout@v4
+
+    - name: ☕ Setup Java 8 (32-bit requis pour RAPC et l'installeur)
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '8'
+        architecture: x86
+
+    - name: 🔑 Patch Registry for BlackBerry Installer
+      shell: powershell
+      run: |
+        Write-Host "Ajout des clés de registre Java pour éviter que l'installeur BlackBerry ne bloque..."
+        $javaPath = $env:JAVA_HOME
+        
+        # Le JDE BlackBerry cherche une version de Java dans le registre. 
+        # S'il ne la trouve pas, il affiche une pop-up invisible et bloque le processus indéfiniment.
+        New-Item -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit\1.8" -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit\1.8" -Name "JavaHome" -Value $javaPath -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit" -Name "CurrentVersion" -Value "1.8" -Force | Out-Null
+        
+        New-Item -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit\1.8" -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit\1.8" -Name "JavaHome" -Value $javaPath -Force | Out-Null
+        New-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit" -Name "CurrentVersion" -Value "1.8" -Force | Out-Null
+
+    - name: 🛠️ Setup Apache Ant
+      shell: powershell
+      run: |
+        Write-Host "Installation d'Apache Ant..."
+        choco install ant -y --no-progress
+
+    - name: 🚀 Téléchargement et Installation du JDE 7.1.0
+      shell: powershell
+      run: |
+        $url = "https://archive.org/download/blackberry-jde/BlackBerry_JDE_7.1.0.exe"
+        $exePath = "C:\BlackBerry_JDE_7.1.0.exe"
+        
+        Write-Host "Téléchargement du JDE 7.1.0 ($url)..."
+        Invoke-WebRequest -Uri $url -OutFile $exePath
+        
+        Write-Host "Installation silencieuse du JDE (Veuillez patienter quelques minutes)..."
+        # /s (InstallShield Silent) /v"/qn" (Passer /qn à MSI pour aucune interface)
+        $process = Start-Process -FilePath $exePath -ArgumentList "/s", "/v`"/qn`"" -PassThru -Wait
+        
+        Write-Host "Installation terminée avec le code de retour : $($process.ExitCode)"
+
+    - name: 🔍 Recherche du JDE et Configuration
+      shell: powershell
+      run: |
+        Write-Host "Recherche du dossier d'installation..."
+        # On cherche dynamiquement où le JDE a été installé
+        $rapcExe = Get-ChildItem -Path "C:\Program Files (x86)\Research In Motion" -Filter "rapc.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        
+        if (-not $rapcExe) {
+            $rapcExe = Get-ChildItem -Path "C:\Program Files" -Filter "rapc.exe" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        }
+        
+        if ($rapcExe) {
+            $jdeHome = $rapcExe.Directory.Parent.FullName
+            Write-Host "JDE trouvé avec succès à l'emplacement : $jdeHome"
+            Write-Host "BLACKBERRY_JDE_HOME=$jdeHome" | Out-File -FilePath $env:GITHUB_ENV -Append
+        } else {
+            Write-Error "Échec de l'installation : rapc.exe est introuvable sur le système."
+            exit 1
+        }
+
+    - name: ⚙️ Compilation du projet
+      shell: bash
+      run: |
+        echo "Lancement de la compilation avec BLACKBERRY_JDE_HOME=$BLACKBERRY_JDE_HOME"
+        
+        if [ -d "blackberry" ] && [ -f "blackberry/build.xml" ]; then
+          cd blackberry
+        elif [ -f "build.xml" ]; then
+          echo "build.xml trouvé à la racine."
+        else
+          echo "ERREUR : build.xml introuvable."
+          exit 1
+        fi
+        
+        ant build
+
+    - name: 📦 Sauvegarde des artefacts (Fichiers d'installation BlackBerry)
+      uses: actions/upload-artifact@v4
+      with:
+        name: BBSB_BlackBerry_App_7.1.0
+        path: |
+          **/*.cod
+          **/*.jad
+          **/*.alx
+          **/*.jar
