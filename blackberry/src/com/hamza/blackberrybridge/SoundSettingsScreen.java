@@ -16,7 +16,7 @@ public class SoundSettingsScreen extends MainScreen {
     private DarkButtonField btnSoundNotifs;
     private DarkButtonField btnVibration;
 
-    public SoundSettingsScreen(SmartBridgeApp app) {
+    public SoundSettingsScreen(final SmartBridgeApp app) {
         this.app = app;
         this.sm = app.getSettingsManager();
         
