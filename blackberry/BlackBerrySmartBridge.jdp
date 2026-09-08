@@ -4,8 +4,12 @@ Version=1.0.6
 Vendor=Hamza
 Description=Android Bluetooth Companion for BlackBerry
 Type=0
+SystemModule=0
+RunOnStartup=0
 RibbonPosition=0
+Icon=icon.png
 [Files]
+icon.png
 src\com\hamza\blackberrybridge\BluetoothManager.java
 src\com\hamza\blackberrybridge\BluetoothServer.java
 src\com\hamza\blackberrybridge\CallManager.java

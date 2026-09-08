@@ -1,4 +1,4 @@
-name: BlackBerry OS 7 Build
+name: BlackBerry OS 5 Build
 
 on:
   push:
@@ -40,11 +40,11 @@ jobs:
         Write-Host "Installation d'Apache Ant..."
         choco install ant -y --no-progress
 
-    - name: 🚀 Téléchargement du JDE 7.1.0
+    - name: 🚀 Téléchargement du JDE 5.0.0
       shell: powershell
       run: |
-        $url = "https://archive.org/download/blackberry-jde/BlackBerry_JDE_7.1.0.exe"
-        $exePath = "C:\BlackBerry_JDE_7.1.0.exe"
+        $url = "https://archive.org/download/blackberry-jde/BlackBerry_JDE_5.0.0.exe"
+        $exePath = "C:\BlackBerry_JDE_5.0.0.exe"
         Write-Host "Téléchargement en cours..."
         Invoke-WebRequest -Uri $url -OutFile $exePath
         Write-Host "Téléchargement terminé."
@@ -58,7 +58,7 @@ jobs:
         
         Write-Host "1. Extraction de l'EXE (Advanced Installer)..."
         # Advanced Installer utilise l'argument /extract
-        $process = Start-Process -FilePath "C:\BlackBerry_JDE_7.1.0.exe" -ArgumentList "/extract", "`"$extractPath`"" -PassThru -Wait
+        $process = Start-Process -FilePath "C:\BlackBerry_JDE_5.0.0.exe" -ArgumentList "/extract", "`"$extractPath`"" -PassThru -Wait
         
         Write-Host "Code de retour de l'extraction : $($process.ExitCode)"
         
@@ -102,7 +102,7 @@ jobs:
     - name: 📦 Sauvegarde des artefacts
       uses: actions/upload-artifact@v4
       with:
-        name: BBSB_BlackBerry_App_7.1.0
+        name: BBSB_BlackBerry_App_5.0.0
         path: |
           blackberry/*.cod
           blackberry/*.jad
