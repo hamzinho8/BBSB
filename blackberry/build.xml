@@ -1,26 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="BlackBerrySmartBridge" default="build">
+<project name="BlackBerrySmartBridge" default="build" basedir=".">
     <property environment="env"/>
     
-    <!-- Use BLACKBERRY_JDE_HOME environment variable, fallback to default -->
     <property name="jde.home" value="${env.BLACKBERRY_JDE_HOME}"/>
     
     <target name="check-env">
         <fail message="BLACKBERRY_JDE_HOME is not set. Please set it to your JDE installation path." unless="env.BLACKBERRY_JDE_HOME"/>
     </target>
 
-    <target name="build" depends="check-env">
+    <target name="generate-rapc">
+        <echo file="BlackBerrySmartBridge.rapc">MIDlet-Name: BlackBerrySmartBridge
+MIDlet-Version: 1.0.6
+MIDlet-Vendor: Hamza
+MIDlet-Description: Android Bluetooth Companion for BlackBerry
+MIDlet-Jar-URL: BlackBerrySmartBridge.jar
+MIDlet-Jar-Size: 0
+MicroEdition-Profile: MIDP-2.0
+MicroEdition-Configuration: CLDC-1.1
+MIDlet-1: BlackBerrySmartBridge,icon.png,com.hamza.blackberrybridge.SmartBridgeApp
+RIM-MIDlet-Flags-1: 0
+</echo>
+    </target>
+
+    <target name="build" depends="check-env, generate-rapc">
         <echo message="Building BlackBerrySmartBridge using RAPC in ${jde.home}..."/>
+        <path id="src.files">
+            <fileset dir="." includes="src/**/*.java"/>
+            <fileset dir="." includes="icon.png"/>
+        </path>
+        
+        <!-- Use relative paths to avoid issues with spaces in absolute paths -->
+        <pathconvert property="src.list" refid="src.files" pathsep=" ">
+            <map from="${basedir}/" to=""/>
+            <map from="${basedir}\" to=""/>
+        </pathconvert>
+        
         <exec executable="${jde.home}/bin/rapc.exe" failonerror="true">
             <arg value="import=${jde.home}/lib/net_rim_api.jar"/>
             <arg value="codename=BlackBerrySmartBridge"/>
-            <arg value="BlackBerrySmartBridge.jdp"/>
+            <arg value="BlackBerrySmartBridge.rapc"/>
+            <arg line="${src.list}"/>
         </exec>
     </target>
 
     <target name="clean">
         <delete>
-            <fileset dir="." includes="*.cod,*.jad,*.cso,*.debug,*.jar"/>
+            <fileset dir="." includes="*.cod,*.jad,*.cso,*.debug,*.jar,*.rapc"/>
         </delete>
     </target>
 </project>
