@@ -84,7 +84,8 @@ jobs:
         if ($rapcExe) {
             $jdeHome = $rapcExe.Directory.Parent.FullName
             Write-Host "Outils trouvés dans : $jdeHome"
-            Write-Host "BLACKBERRY_JDE_HOME=$jdeHome" | Out-File -FilePath $env:GITHUB_ENV -Append
+            # Utilisation de Add-Content pour écrire correctement dans GITHUB_ENV
+            Add-Content -Path $env:GITHUB_ENV -Value "BLACKBERRY_JDE_HOME=$jdeHome"
         } else {
             Write-Error "Échec : rapc.exe introuvable."
             exit 1
