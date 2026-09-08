@@ -97,9 +97,12 @@ public class SettingsScreen extends MainScreen {
         DarkButtonField btnSyncClip = new DarkButtonField("Sync Clip", 130, 40);
         btnSyncClip.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) {
-                String clip = Clipboard.getClipboard().getString();
-                if (clip != null && clip.length() > 0) {
-                    app.getConnectionManager().sendData("CLIPBOARD|" + clip + "\n");
+                Object clipObj = Clipboard.getClipboard().get();
+                if (clipObj != null) {
+                    String clip = clipObj.toString();
+                    if (clip.length() > 0) {
+                        app.getConnectionManager().sendData("CLIPBOARD|" + clip + "\n");
+                    }
                 }
             }
         });
@@ -119,7 +122,7 @@ public class SettingsScreen extends MainScreen {
             if (i < qr.size()) {
                 val = (String) qr.elementAt(i);
             }
-            quickReplyFields[i] = new BasicEditField((i+1) + ": ", val, 50, BasicEditField.DEFAULT_KEYBOARD_LAYOUT);
+            quickReplyFields[i] = new BasicEditField((i+1) + ": ", val, 50, 0);
             add(quickReplyFields[i]);
         }
         

@@ -19,6 +19,12 @@ public class ContactManager {
         contacts.addElement(new Contact(id, name, number));
     }
     
+    public void callContact(String number) {
+        if (app.getConnectionManager() != null) {
+            app.getConnectionManager().sendData("CALL:" + number + "\n");
+        }
+    }
+    
     public Vector getContacts() {
         return contacts;
     }

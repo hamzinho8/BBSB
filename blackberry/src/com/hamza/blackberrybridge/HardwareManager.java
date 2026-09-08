@@ -23,7 +23,6 @@ public class HardwareManager {
             }
         }
         
-        LED.setConfiguration(500, 1000, LED.BRIGHTNESS_MAX);
         LED.setState(LED.STATE_BLINKING);
     }
     
@@ -38,7 +37,6 @@ public class HardwareManager {
             Alert.startVibrate(2000); // 2 second vibrate for incoming call
         }
         
-        LED.setConfiguration(250, 250, LED.BRIGHTNESS_MAX);
         LED.setState(LED.STATE_BLINKING);
     }
     

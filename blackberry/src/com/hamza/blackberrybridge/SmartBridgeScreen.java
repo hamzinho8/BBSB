@@ -150,13 +150,13 @@ public class SmartBridgeScreen extends MainScreen {
         Calendar cal = Calendar.getInstance();
         int h = cal.get(Calendar.HOUR_OF_DAY);
         int m = cal.get(Calendar.MINUTE);
-        String time = (h < 10 ? "0" + h : h) + ":" + (m < 10 ? "0" + m : m);
+        String time = (h < 10 ? "0" + h : "" + h) + ":" + (m < 10 ? "0" + m : "" + m);
         clockLabel.setText(time);
         
         int day = cal.get(Calendar.DAY_OF_MONTH);
         int month = cal.get(Calendar.MONTH) + 1;
         int year = cal.get(Calendar.YEAR);
-        dateLabel.setText((day < 10 ? "0"+day : day) + "/" + (month < 10 ? "0"+month : month) + "/" + year);
+        dateLabel.setText((day < 10 ? "0"+day : "" + day) + "/" + (month < 10 ? "0"+month : "" + month) + "/" + year);
         
         String currentBat = batteryLabel.getText();
         int andIndex = currentBat.indexOf("[AND: ");
