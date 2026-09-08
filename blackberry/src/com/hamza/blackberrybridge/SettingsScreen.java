@@ -9,7 +9,7 @@ import net.rim.device.api.system.Clipboard;
 
 public class SettingsScreen extends MainScreen {
     private SettingsManager settingsManager;
-    private SmartBridgeApp app;
+    private final SmartBridgeApp app;
     private BasicEditField[] quickReplyFields = new BasicEditField[3];
     
     public SettingsScreen(SettingsManager manager, SmartBridgeApp app) {
