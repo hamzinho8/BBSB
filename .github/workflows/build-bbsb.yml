@@ -93,8 +93,9 @@ jobs:
     - name: ⚙️ Compilation du projet BlackBerry
       shell: bash
       run: |
-        # Navigation exacte vers le dossier contenant le code dans votre dépôt
-        cd app/applet/blackberry
+        echo "Lancement de ant avec BLACKBERRY_JDE_HOME=$BLACKBERRY_JDE_HOME"
+        # On se place dans le dossier blackberry à la racine du dépôt
+        cd blackberry
         ant build
 
     - name: 📦 Sauvegarde des artefacts
@@ -102,7 +103,7 @@ jobs:
       with:
         name: BBSB_BlackBerry_App_7.1.0
         path: |
-          app/applet/blackberry/*.cod
-          app/applet/blackberry/*.jad
-          app/applet/blackberry/*.alx
-          app/applet/blackberry/*.jar
+          blackberry/*.cod
+          blackberry/*.jad
+          blackberry/*.alx
+          blackberry/*.jar
