@@ -1,7 +1,7 @@
 package com.hamza.blackberrybridge;
 
 import java.util.Vector;
-import net.rim.device.api.system.Clipboard;
+
 
 public class ProtocolManager {
     private ConnectionManager connectionManager;
@@ -64,7 +64,7 @@ public class ProtocolManager {
                 if (parts.length >= 3) app.getMediaManager().updateMeta(parts[1], parts[2]);
             }
             else if (command.equals("CLIPBOARD")) {
-                if (parts.length >= 2) Clipboard.getClipboard().put(parts[1]);
+                // Clipboard sync disabled due to signature requirement
             }
             else {
                 connectionManager.sendData("ERROR|UNKNOWN_COMMAND\n");

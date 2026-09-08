@@ -5,7 +5,7 @@ import net.rim.device.api.ui.component.*;
 import net.rim.device.api.ui.container.*;
 import net.rim.device.api.ui.decor.*;
 import java.util.Vector;
-import net.rim.device.api.system.Clipboard;
+
 
 public class SettingsScreen extends MainScreen {
     private SettingsManager settingsManager;
@@ -97,13 +97,7 @@ public class SettingsScreen extends MainScreen {
         DarkButtonField btnSyncClip = new DarkButtonField("Sync Clip", 130, 40);
         btnSyncClip.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) {
-                Object clipObj = Clipboard.getClipboard().get();
-                if (clipObj != null) {
-                    String clip = clipObj.toString();
-                    if (clip.length() > 0) {
-                        app.getConnectionManager().sendData("CLIPBOARD|" + clip + "\n");
-                    }
-                }
+                // Clipboard sync disabled due to signature requirement
             }
         });
         hfmActions.add(btnFindPhone);
