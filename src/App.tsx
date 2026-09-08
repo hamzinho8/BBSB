@@ -27,7 +27,7 @@ export default function App() {
             <div className="p-3 bg-[#1e1e1e] border-l-4 border-blue-600">
               <h3 className="text-[10px] uppercase text-gray-500 font-bold mb-1">Android Link</h3>
               <p className="text-sm text-blue-400 font-medium">Pixel 7 Pro ● Connected</p>
-              <p className="text-[10px] text-gray-500 truncate">ID: 00001101-0000-1000...</p>
+              <p className="text-[10px] text-gray-500 truncate">ID: 27b44265-43a7-4744...</p>
             </div>
             
             <div className="p-3 bg-[#1e1e1e] border-l-4 border-green-600">

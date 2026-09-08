@@ -10,7 +10,7 @@ import javax.microedition.io.StreamConnection;
 import javax.microedition.io.StreamConnectionNotifier;
 
 public class BluetoothServer extends Thread {
-    private static final String UUID = "0000110100001000800000805F9B34FB";
+    private static final String UUID = "27B4426543A74744A6F1C20531AE40F1";
     private static final String URL = "btspp://localhost:" + UUID + ";name=SmartBridge;authorize=false;encrypt=false";
     
     private boolean running = true;
