@@ -1,4 +1,4 @@
-name: BlackBerry OS 7 Build
+name: BlackBerry OS 7 Build (Anti-Hang)
 
 on:
   push:
@@ -20,24 +20,9 @@ jobs:
         java-version: '8'
         architecture: x86
 
-    - name: 🔑 Patch Registry for BlackBerry Installer
-      shell: powershell
-      run: |
-        Write-Host "Ajout des clés de registre Java pour l'installeur BlackBerry..."
-        $javaPath = $env:JAVA_HOME
-        
-        New-Item -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit\1.8" -Force | Out-Null
-        New-ItemProperty -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit\1.8" -Name "JavaHome" -Value $javaPath -Force | Out-Null
-        New-ItemProperty -Path "HKLM:\SOFTWARE\JavaSoft\Java Development Kit" -Name "CurrentVersion" -Value "1.8" -Force | Out-Null
-        
-        New-Item -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit\1.8" -Force | Out-Null
-        New-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit\1.8" -Name "JavaHome" -Value $javaPath -Force | Out-Null
-        New-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\JavaSoft\Java Development Kit" -Name "CurrentVersion" -Value "1.8" -Force | Out-Null
-
     - name: 🛠️ Setup Apache Ant
       shell: powershell
       run: |
-        Write-Host "Installation d'Apache Ant..."
         choco install ant -y --no-progress
 
     - name: 🚀 Téléchargement du JDE 7.1.0
@@ -49,30 +34,31 @@ jobs:
         Invoke-WebRequest -Uri $url -OutFile $exePath
         Write-Host "Téléchargement terminé."
 
-    - name: 📦 Extraction Silencieuse (Advanced Installer)
+    - name: 📦 Extraction Silencieuse (Bypass de l'Installeur)
       shell: powershell
       run: |
         $extractPath = "C:\JDE_Extract"
         $finalJdePath = "C:\BlackBerry_JDE"
         New-Item -ItemType Directory -Force -Path $extractPath | Out-Null
         
-        Write-Host "1. Extraction de l'EXE (Advanced Installer)..."
-        # Advanced Installer utilise l'argument /extract
-        $process = Start-Process -FilePath "C:\BlackBerry_JDE_7.1.0.exe" -ArgumentList "/extract", "`"$extractPath`"" -PassThru -Wait
+        Write-Host "1. Extraction du fichier MSI depuis l'EXE InstallShield..."
+        # Demande à InstallShield d'extraire le MSI sans l'exécuter
+        $process = Start-Process -FilePath "C:\BlackBerry_JDE_7.1.0.exe" -ArgumentList "/s", "/x", "/b`"C:\JDE_Extract`"", "/v`"/qn`"" -PassThru
         
-        Write-Host "Code de retour de l'extraction : $($process.ExitCode)"
+        # On attend maximum 2 minutes pour l'extraction
+        $process.WaitForExit(120000)
         
         $msiFile = Get-ChildItem -Path $extractPath -Filter "*.msi" -Recurse | Select-Object -First 1
         if (-not $msiFile) {
-            Write-Error "Le fichier MSI n'a pas pu être extrait. Le dossier contient :"
-            Get-ChildItem -Path $extractPath -Recurse
+            Write-Error "Le fichier MSI n'a pas pu être extrait."
             exit 1
         }
         Write-Host "MSI extrait avec succès : $($msiFile.FullName)"
         
-        Write-Host "2. Installation Administrative (Décompression pure)..."
-        $msiProcess = Start-Process -FilePath "msiexec.exe" -ArgumentList "/a", "`"$($msiFile.FullName)`"", "/qn", "TARGETDIR=`"$finalJdePath`"" -PassThru -Wait
-        Write-Host "Code de retour MSI : $($msiProcess.ExitCode)"
+        Write-Host "2. Installation Administrative (Décompression pure, aucun prérequis Java testé)..."
+        # msiexec /a force l'extraction des fichiers de l'application sans lancer l'installation réelle
+        $msiProcess = Start-Process -FilePath "msiexec.exe" -ArgumentList "/a", "`"$($msiFile.FullName)`"", "/qn", "TARGETDIR=`"$finalJdePath`"" -PassThru
+        $msiProcess.WaitForExit(300000)
         Write-Host "Décompression terminée."
 
     - name: 🔍 Configuration du JDE
@@ -93,8 +79,16 @@ jobs:
     - name: ⚙️ Compilation du projet BlackBerry
       shell: bash
       run: |
-        # Navigation exacte vers le dossier contenant le code dans votre dépôt
-        cd app/applet/blackberry
+        echo "Lancement de ant avec BLACKBERRY_JDE_HOME=$BLACKBERRY_JDE_HOME"
+        # On se place dans le dossier contenant build.xml
+        if [ -d "blackberry" ] && [ -f "blackberry/build.xml" ]; then
+          cd blackberry
+        elif [ -f "build.xml" ]; then
+          echo "build.xml trouvé à la racine"
+        else
+          echo "ERREUR : Fichier build.xml introuvable."
+          exit 1
+        fi
         ant build
 
     - name: 📦 Sauvegarde des artefacts
@@ -102,7 +96,7 @@ jobs:
       with:
         name: BBSB_BlackBerry_App_7.1.0
         path: |
-          app/applet/blackberry/*.cod
-          app/applet/blackberry/*.jad
-          app/applet/blackberry/*.alx
-          app/applet/blackberry/*.jar
+          **/*.cod
+          **/*.jad
+          **/*.alx
+          **/*.jar
