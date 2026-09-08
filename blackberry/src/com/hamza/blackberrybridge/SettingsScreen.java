@@ -12,7 +12,7 @@ public class SettingsScreen extends MainScreen {
     private final SmartBridgeApp app;
     private BasicEditField[] quickReplyFields = new BasicEditField[3];
     
-    public SettingsScreen(SettingsManager manager, SmartBridgeApp app) {
+    public SettingsScreen(SettingsManager manager, final SmartBridgeApp app) {
         this.settingsManager = manager;
         this.app = app;
         getMainManager().setBackground(BackgroundFactory.createSolidBackground(Color.BLACK));
