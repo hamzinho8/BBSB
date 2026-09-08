@@ -1,6 +1,7 @@
 package com.hamza.blackberrybridge;
 
 import net.rim.device.api.ui.UiApplication;
+import net.rim.device.api.ui.component.Dialog;
 
 public class SmartBridgeApp extends UiApplication {
     private UIManager uiManager;
@@ -18,24 +19,32 @@ public class SmartBridgeApp extends UiApplication {
     }
 
     public SmartBridgeApp() {
-        settingsManager = new SettingsManager();
-        
-        LogManager.setDebugEnabled(settingsManager.isDebugMode());
-        LogManager.log("APP", "Starting SmartBridge");
-        
-        uiManager = new UIManager(this);
-        audioManager = new AudioManager(this);
-        connectionManager = new ConnectionManager(uiManager, this);
-        callManager = new CallManager(uiManager, this);
-        notificationManager = new NotificationManager(uiManager, this);
-        contactManager = new ContactManager(this);
-        mediaManager = new MediaManager(this);
-        
-        pushScreen(uiManager.getMainScreen());
-        
-        // Auto-connect if enabled
-        if (settingsManager.isAutoReconnect()) {
-            connectionManager.startServer();
+        try {
+            settingsManager = new SettingsManager();
+            
+            LogManager.setDebugEnabled(settingsManager.isDebugMode());
+            LogManager.log("APP", "Starting SmartBridge");
+            
+            uiManager = new UIManager(this);
+            audioManager = new AudioManager(this);
+            connectionManager = new ConnectionManager(uiManager, this);
+            callManager = new CallManager(uiManager, this);
+            notificationManager = new NotificationManager(uiManager, this);
+            contactManager = new ContactManager(this);
+            mediaManager = new MediaManager(this);
+            
+            pushScreen(uiManager.getMainScreen());
+            
+            // Auto-connect if enabled
+            if (settingsManager.isAutoReconnect()) {
+                connectionManager.startServer();
+            }
+        } catch (final Throwable t) {
+            invokeLater(new Runnable() {
+                public void run() {
+                    Dialog.alert("Init Error: " + t.toString() + " - " + t.getMessage());
+                }
+            });
         }
     }
 
@@ -51,6 +60,6 @@ public class SmartBridgeApp extends UiApplication {
     protected void onExit() {
         LogManager.log("APP", "Exiting");
         if (audioManager != null) audioManager.stopCallRingtone();
-        connectionManager.stopServer();
+        if (connectionManager != null) connectionManager.stopServer();
     }
 }

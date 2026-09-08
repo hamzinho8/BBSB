@@ -30,7 +30,7 @@ public class BluetoothServer extends Thread {
         try {
             LocalDevice.getLocalDevice().setDiscoverable(DiscoveryAgent.GIAC);
             LogManager.log("BT", "Starting SPP Server...");
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LogManager.error("BT_ERR", "Cannot make discoverable");
         }
         
@@ -77,7 +77,7 @@ public class BluetoothServer extends Thread {
                         break;
                     }
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 LogManager.error("BT_ERR", "Server Exception: " + e.getMessage());
                 try { Thread.sleep(3000); } catch (Exception sleepEx) {}
             } finally {
@@ -88,9 +88,9 @@ public class BluetoothServer extends Thread {
     
     private void cleanupConnection() {
         connected = false;
-        try { if (inputStream != null) { inputStream.close(); inputStream = null; } } catch (Exception e) {}
-        try { if (outputStream != null) { outputStream.close(); outputStream = null; } } catch (Exception e) {}
-        try { if (connection != null) { connection.close(); connection = null; } } catch (Exception e) {}
+        try { if (inputStream != null) { inputStream.close(); inputStream = null; } } catch (Throwable e) {}
+        try { if (outputStream != null) { outputStream.close(); outputStream = null; } } catch (Throwable e) {}
+        try { if (connection != null) { connection.close(); connection = null; } } catch (Throwable e) {}
         
         if (running) {
             connectionManager.onDisconnected();
@@ -104,7 +104,7 @@ public class BluetoothServer extends Thread {
     public void stopServer() {
         running = false;
         cleanupConnection();
-        try { if (notifier != null) { notifier.close(); notifier = null; } } catch (Exception e) {}
+        try { if (notifier != null) { notifier.close(); notifier = null; } } catch (Throwable e) {}
     }
     
     public boolean isConnected() {

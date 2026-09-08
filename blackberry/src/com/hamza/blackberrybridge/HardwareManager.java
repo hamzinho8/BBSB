@@ -11,19 +11,25 @@ public class HardwareManager {
         
         boolean doVibrate = sm.isVibrationEnabled() && (p.equals("Vibrate") || p.equals("Ring+Vibrate"));
         
-        if (doVibrate && Alert.isVibrateSupported()) {
-            if (appName != null && appName.toLowerCase().indexOf("whatsapp") != -1) {
-                // Two short vibes for WhatsApp
-                Alert.startVibrate(255);
-                try { Thread.sleep(200); } catch(Exception e){}
-                Alert.startVibrate(255);
-            } else {
-                // Standard one vibe for others
-                Alert.startVibrate(500);
+        try {
+            if (doVibrate && Alert.isVibrateSupported()) {
+                if (appName != null && appName.toLowerCase().indexOf("whatsapp") != -1) {
+                    Alert.startVibrate(255);
+                    try { Thread.sleep(200); } catch(Exception e){}
+                    Alert.startVibrate(255);
+                } else {
+                    Alert.startVibrate(500);
+                }
             }
+        } catch (Throwable t) {
+            // Ignore restricted API error
         }
         
-        LED.setState(LED.STATE_BLINKING);
+        try {
+            LED.setState(LED.STATE_BLINKING);
+        } catch (Throwable t) {
+            // Ignore restricted API error
+        }
     }
     
     public static void triggerCallAlert(SmartBridgeApp app) {
@@ -33,16 +39,26 @@ public class HardwareManager {
         
         boolean doVibrate = sm.isVibrationEnabled() && (p.equals("Vibrate") || p.equals("Ring+Vibrate"));
         
-        if (doVibrate && Alert.isVibrateSupported()) {
-            Alert.startVibrate(2000); // 2 second vibrate for incoming call
+        try {
+            if (doVibrate && Alert.isVibrateSupported()) {
+                Alert.startVibrate(2000); 
+            }
+        } catch (Throwable t) {
+            // Ignore
         }
         
-        LED.setState(LED.STATE_BLINKING);
+        try {
+            LED.setState(LED.STATE_BLINKING);
+        } catch (Throwable t) {
+            // Ignore
+        }
     }
     
     public static void stopAlerts() {
-        LED.setState(LED.STATE_OFF);
-        // Alert.stopVibrate() is not natively accessible to interrupt a specific length easily without just letting it finish 
-        // in BBOS unless it's looping, but for 2000ms it will just end naturally.
+        try {
+            LED.setState(LED.STATE_OFF);
+        } catch (Throwable t) {
+            // Ignore
+        }
     }
 }

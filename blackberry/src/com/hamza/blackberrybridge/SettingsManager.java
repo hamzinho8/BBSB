@@ -48,7 +48,7 @@ public class SettingsManager {
                 initDefaultSettings();
                 saveSettings();
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             initDefaultSettings();
         } finally {
             try { if (rs != null) rs.closeRecordStore(); } catch (Exception ex) {}
@@ -105,7 +105,7 @@ public class SettingsManager {
             } else {
                 rs.setRecord(1, data, 0, data.length);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // Ignore
         } finally {
             try { if (rs != null) rs.closeRecordStore(); } catch (Exception ex) {}

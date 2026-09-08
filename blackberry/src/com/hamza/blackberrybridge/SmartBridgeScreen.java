@@ -34,7 +34,7 @@ public class SmartBridgeScreen extends MainScreen {
         clockLabel = new DarkLabelField("--:--", Field.FIELD_HCENTER, clockColor);
         try {
             clockLabel.setFont(Font.getDefault().derive(Font.BOLD, 70));
-        } catch (Exception e) {}
+        } catch (Throwable e) {}
         
         dateLabel = new DarkLabelField("---", Field.FIELD_HCENTER, 0xAAAAAA);
         try { dateLabel.setFont(Font.getDefault().derive(Font.PLAIN, 20)); } catch(Exception e){}
@@ -55,7 +55,7 @@ public class SmartBridgeScreen extends MainScreen {
             Font smallFont = Font.getDefault().derive(Font.PLAIN, 14);
             btStatusLabel.setFont(smallFont);
             batteryLabel.setFont(smallFont);
-        } catch (Exception e) {}
+        } catch (Throwable e) {}
         
         statusContainer.add(btStatusLabel);
         statusContainer.add(batteryLabel);
@@ -165,7 +165,7 @@ public class SmartBridgeScreen extends MainScreen {
             int end = currentBat.indexOf("]", andIndex);
             if (end != -1) andBat = currentBat.substring(andIndex + 6, end);
         }
-        int bbBat = DeviceInfo.getBatteryLevel();
+        int bbBat = BatteryManager.getBatteryLevel();
         batteryLabel.setText("[AND: " + andBat + "] [BB: " + bbBat + "%]");
         
         // Refresh Night Mode color if changed
