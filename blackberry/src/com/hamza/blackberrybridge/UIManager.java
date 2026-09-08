@@ -18,9 +18,9 @@ public class UIManager {
     }
     
     public void pushScreen(final Screen screen) {
-        Application.getApplication().invokeLater(new Runnable() {
+        net.rim.device.api.system.Application.getApplication().invokeLater(new Runnable() {
             public void run() {
-                Application.getApplication().pushScreen(screen);
+                net.rim.device.api.ui.UiApplication.getUiApplication().pushScreen(screen);
             }
         });
     }

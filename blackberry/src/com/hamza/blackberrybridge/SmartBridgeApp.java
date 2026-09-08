@@ -18,18 +18,17 @@ public class SmartBridgeApp extends UiApplication {
     }
 
     public SmartBridgeApp() {
-        LogManager.init();
         settingsManager = new SettingsManager();
         
         LogManager.setDebugEnabled(settingsManager.isDebugMode());
-        LogManager.info("APP", "Starting SmartBridge");
+        LogManager.log("APP", "Starting SmartBridge");
         
         uiManager = new UIManager(this);
         audioManager = new AudioManager(this);
-        connectionManager = new ConnectionManager(this);
+        connectionManager = new ConnectionManager(uiManager, this);
         callManager = new CallManager(uiManager, this);
         notificationManager = new NotificationManager(uiManager, this);
-        contactManager = new ContactManager(uiManager);
+        contactManager = new ContactManager(this);
         mediaManager = new MediaManager(this);
         
         pushScreen(uiManager.getMainScreen());
@@ -50,9 +49,8 @@ public class SmartBridgeApp extends UiApplication {
     public AudioManager getAudioManager() { return audioManager; }
     
     protected void onExit() {
-        LogManager.info("APP", "Exiting");
+        LogManager.log("APP", "Exiting");
         if (audioManager != null) audioManager.stopCallRingtone();
         connectionManager.stopServer();
-        super.onExit();
     }
 }

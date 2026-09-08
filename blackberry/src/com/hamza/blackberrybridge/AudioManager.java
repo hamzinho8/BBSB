@@ -38,7 +38,7 @@ public class AudioManager {
             } else {
                 LogManager.error("AUDIO", "Missing /ringtone.mp3, using fallback tone");
                 // Fallback to system tone if file missing
-                Alert.startBuzzer(new byte[] { 50, 50, 50, 50 }, 50);
+                Alert.startBuzzer(new short[] { 50, 50, 50, 50 }, 50);
             }
         } catch (Exception e) {
             LogManager.error("AUDIO", "Call ring error: " + e.getMessage());
