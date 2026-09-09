@@ -58,8 +58,8 @@ public class ProtocolManager {
                 if (parts.length >= 4) app.getContactManager().handleContact(parts[1], parts[2], parts[3]);
             }
             else if (command.equals("SMS")) {
-                if (parts.length >= 3) {
-                    app.getUIManager().showNewMessagePopup(parts[1], parts[2]);
+                if (parts.length >= 4) {
+                    app.getUIManager().showNewMessagePopup(parts[1], parts[2], parts[3]);
                     HardwareManager.triggerMessageAlert();
                 } else {
                     connectionManager.sendData("ERROR|INVALID_PACKET\n");

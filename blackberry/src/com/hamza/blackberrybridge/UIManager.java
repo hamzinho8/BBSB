@@ -33,10 +33,10 @@ public class UIManager {
         });
     }
     
-    public void showNewMessagePopup(final String sender, final String body) {
+    public void showNewMessagePopup(final String id, final String sender, final String body) {
         Application.getApplication().invokeLater(new Runnable() {
             public void run() {
-                net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(new MessagePopupScreen(sender, body), 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
+                net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(new MessagePopupScreen(app, id, sender, body), 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
             }
         });
     }
