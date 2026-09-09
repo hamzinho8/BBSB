@@ -89,9 +89,9 @@ public class CallScreen extends MainScreen {
     }
     
     private void answer() {
-        setStatus("Active");
         callManager.answerCall(callId);
         HardwareManager.stopAlerts();
+        close();
     }
     
     private void reject() {

@@ -86,6 +86,10 @@ public class UIManager {
         pushScreen(notifListScreen);
     }
     
+    public void openDialer() {
+        pushScreen(new DialerScreen(app, app.getCallManager()));
+    }
+    
     public void openContacts() {
         pushScreen(new ContactListScreen(app.getContactManager()));
     }
@@ -96,5 +100,29 @@ public class UIManager {
     
     public void openSettings() {
         pushScreen(new SettingsScreen(app.getSettingsManager(), app));
+    }
+    
+    private FindPhonePopup findPhonePopup;
+    
+    public void showFindPhonePopup() {
+        Application.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                if (findPhonePopup == null) {
+                    findPhonePopup = new FindPhonePopup();
+                    net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(findPhonePopup, 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
+                }
+            }
+        });
+    }
+    
+    public void hideFindPhonePopup() {
+        Application.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                if (findPhonePopup != null) {
+                    findPhonePopup.close();
+                    findPhonePopup = null;
+                }
+            }
+        });
     }
 }

@@ -46,4 +46,26 @@ public class HardwareManager {
             vibrateTimer = null;
         }
     }
+    
+    private static Timer findPhoneTimer;
+    
+    public static void startFindPhoneAlert() {
+        stopFindPhoneAlert();
+        findPhoneTimer = new Timer();
+        findPhoneTimer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                Alert.startAudio(Alert.BEEP, 100);
+                if (Alert.isVibrateSupported()) Alert.startVibrate(255);
+                try { net.rim.device.api.system.LED.setState(net.rim.device.api.system.LED.STATE_BLINKING); } catch(Throwable t) {}
+            }
+        }, 0, 1000);
+    }
+    
+    public static void stopFindPhoneAlert() {
+        if (findPhoneTimer != null) {
+            findPhoneTimer.cancel();
+            findPhoneTimer = null;
+        }
+        try { net.rim.device.api.system.LED.setState(net.rim.device.api.system.LED.STATE_OFF); } catch(Throwable t) {}
+    }
 }

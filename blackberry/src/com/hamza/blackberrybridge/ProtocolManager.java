@@ -57,6 +57,9 @@ public class ProtocolManager {
             else if (command.equals("CONTACT")) {
                 if (parts.length >= 4) app.getContactManager().handleContact(parts[1], parts[2], parts[3]);
             }
+            else if (command.equals("CONTACTS_END")) {
+                if (parts.length >= 2) app.getContactManager().handleContactsEnd(parts[1]);
+            }
             else if (command.equals("SMS")) {
                 if (parts.length >= 4) {
                     app.getUIManager().showNewMessagePopup(parts[1], parts[2], parts[3]);
@@ -76,6 +79,14 @@ public class ProtocolManager {
                 if (parts.length >= 4) {
                     app.getMediaManager().updateMedia(parts[1], parts[2], parts[3]);
                 }
+            }
+            else if (command.equals("FIND_PHONE")) {
+                HardwareManager.startFindPhoneAlert();
+                app.getUIManager().showFindPhonePopup();
+            }
+            else if (command.equals("FIND_PHONE_STOP")) {
+                HardwareManager.stopFindPhoneAlert();
+                app.getUIManager().hideFindPhonePopup();
             }
             else if (command.equals("CLIPBOARD")) {
                 // Clipboard sync disabled due to signature requirement

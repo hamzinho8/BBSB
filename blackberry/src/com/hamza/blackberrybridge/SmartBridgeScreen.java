@@ -85,7 +85,7 @@ public class SmartBridgeScreen extends MainScreen {
         HorizontalFieldManager row1 = new HorizontalFieldManager(Field.FIELD_HCENTER);
         DarkButtonField btnCalls = new DarkButtonField("Calls", btnW, btnH);
         btnCalls.setChangeListener(new FieldChangeListener() {
-            public void fieldChanged(Field field, int context) { app.getUIManager().openContacts(); }
+            public void fieldChanged(Field field, int context) { app.getUIManager().openDialer(); }
         });
         
         DarkButtonField btnMessages = new DarkButtonField("Messages", btnW, btnH);
@@ -214,5 +214,19 @@ public class SmartBridgeScreen extends MainScreen {
             return true;
         }
         return super.keyDown(keycode, time);
+    protected void makeMenu(net.rim.device.api.ui.component.Menu menu, int instance) {
+        super.makeMenu(menu, instance);
+        menu.add(new net.rim.device.api.ui.MenuItem("Faire sonner l'Android", 110, 10) {
+            public void run() {
+                app.getConnectionManager().sendData("FIND_PHONE\n");
+            }
+        });
+        menu.add(new net.rim.device.api.ui.MenuItem("Arrêter la sonnerie", 110, 11) {
+            public void run() {
+                app.getConnectionManager().sendData("FIND_PHONE_STOP\n");
+            }
+        });
+    }
+
     }
 }
