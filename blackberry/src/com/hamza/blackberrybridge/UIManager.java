@@ -17,6 +17,14 @@ public class UIManager {
         return mainScreen;
     }
     
+    public void pushGlobalScreen(final Screen screen) {
+        net.rim.device.api.system.Application.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(screen, 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
+            }
+        });
+    }
+    
     public void pushScreen(final Screen screen) {
         net.rim.device.api.system.Application.getApplication().invokeLater(new Runnable() {
             public void run() {
@@ -25,6 +33,14 @@ public class UIManager {
         });
     }
     
+    public void showNewMessagePopup(final String sender, final String body) {
+        Application.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(new MessagePopupScreen(sender, body), 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
+            }
+        });
+    }
+
     public void updateConnectionStatus(final String status) {
         Application.getApplication().invokeLater(new Runnable() {
             public void run() {
@@ -41,10 +57,10 @@ public class UIManager {
         });
     }
     
-    public void updateWeather(final String temp, final String cond) {
+    public void updateWeather(final String temp, final String unit, final String cond, final String city) {
         Application.getApplication().invokeLater(new Runnable() {
             public void run() {
-                mainScreen.updateWeather(temp, cond);
+                mainScreen.updateWeather(temp, unit, cond, city);
             }
         });
     }

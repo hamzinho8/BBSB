@@ -21,16 +21,16 @@ public class CallScreen extends MainScreen {
         VerticalFieldManager vfm = new VerticalFieldManager(Field.FIELD_HCENTER | Field.USE_ALL_HEIGHT);
         vfm.setPadding(30, 0, 0, 0);
         
-        DarkLabelField title = new DarkLabelField("Incoming Call", Field.FIELD_HCENTER, 0x00FF00); // Green title
+        DarkLabelField title = new DarkLabelField("Appel Entrant...", Field.FIELD_HCENTER, 0x00FF00); // Green title
         try { title.setFont(Font.getDefault().derive(Font.BOLD, 22)); } catch(Exception e){}
         
-        DarkLabelField nameLabel = new DarkLabelField(name != null && name.length() > 0 ? name : "Unknown Caller", Field.FIELD_HCENTER, Color.WHITE);
+        DarkLabelField nameLabel = new DarkLabelField(name != null && name.length() > 0 ? name : "Inconnu", Field.FIELD_HCENTER, Color.WHITE);
         try { nameLabel.setFont(Font.getDefault().derive(Font.BOLD, 45)); } catch(Exception e){}
         
         DarkLabelField numberLabel = new DarkLabelField(number != null ? number : "", Field.FIELD_HCENTER, 0xAAAAAA);
         try { numberLabel.setFont(Font.getDefault().derive(Font.PLAIN, 24)); } catch(Exception e){}
         
-        statusLabel = new DarkLabelField("Ringing...", Field.FIELD_HCENTER, 0xFFCC00);
+        statusLabel = new DarkLabelField("Sonnerie...", Field.FIELD_HCENTER, 0xFFCC00);
         try { statusLabel.setFont(Font.getDefault().derive(Font.PLAIN, 20)); } catch(Exception e){}
         
         vfm.add(title);
@@ -47,12 +47,12 @@ public class CallScreen extends MainScreen {
         
         HorizontalFieldManager hfm = new HorizontalFieldManager(Field.FIELD_HCENTER);
         
-        CallButtonField btnAnswer = new CallButtonField("ANSWER", 0x009900, 0x00FF00, 150, 60);
+        CallButtonField btnAnswer = new CallButtonField("Décrocher", 0x009900, 0x00FF00, 150, 60);
         btnAnswer.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) { answer(); }
         });
         
-        CallButtonField btnReject = new CallButtonField("REJECT", 0xCC0000, 0xFF3333, 150, 60);
+        CallButtonField btnReject = new CallButtonField("Refuser", 0xCC0000, 0xFF3333, 150, 60);
         btnReject.setChangeListener(new FieldChangeListener() {
             public void fieldChanged(Field field, int context) { reject(); }
         });

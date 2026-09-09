@@ -57,11 +57,25 @@ public class ProtocolManager {
             else if (command.equals("CONTACT")) {
                 if (parts.length >= 4) app.getContactManager().handleContact(parts[1], parts[2], parts[3]);
             }
-            else if (command.equals("WEATHER")) {
-                if (parts.length >= 3) app.getUIManager().updateWeather(parts[1], parts[2]);
+            else if (command.equals("SMS")) {
+                if (parts.length >= 3) {
+                    app.getUIManager().showNewMessagePopup(parts[1], parts[2]);
+                    HardwareManager.triggerMessageAlert();
+                } else {
+                    connectionManager.sendData("ERROR|INVALID_PACKET\n");
+                }
             }
-            else if (command.equals("MEDIA_META")) {
-                if (parts.length >= 3) app.getMediaManager().updateMeta(parts[1], parts[2]);
+            else if (command.equals("WEATHER")) {
+                if (parts.length >= 5) {
+                    app.getUIManager().updateWeather(parts[1], parts[2], parts[3], parts[4]);
+                } else if (parts.length >= 3) {
+                    app.getUIManager().updateWeather(parts[1], "C", parts[2], "");
+                }
+            }
+            else if (command.equals("MEDIA")) {
+                if (parts.length >= 4) {
+                    app.getMediaManager().updateMedia(parts[1], parts[2], parts[3]);
+                }
             }
             else if (command.equals("CLIPBOARD")) {
                 // Clipboard sync disabled due to signature requirement

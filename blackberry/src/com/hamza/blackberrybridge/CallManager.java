@@ -12,10 +12,9 @@ public class CallManager {
     
     public void handleIncomingCall(String id, String name, String number) {
         HardwareManager.triggerCallAlert(app);
-        app.getAudioManager().playCallRingtone();
         
         activeCallScreen = new CallScreen(this, id, name, number);
-        uiManager.pushScreen(activeCallScreen);
+        uiManager.pushGlobalScreen(activeCallScreen);
     }
     
     public void handleCallActive(String id) {

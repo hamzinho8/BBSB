@@ -17,7 +17,7 @@ public class SmartBridgeScreen extends MainScreen {
     private DarkLabelField weatherLabel;
     private DarkButtonField btnNotifs;
     private SmartBridgeApp app;
-    private Timer uiTimer;
+    private DarkLabelField bbBatteryLabel;
     
     public SmartBridgeScreen(SmartBridgeApp application) {
         super(MainScreen.NO_VERTICAL_SCROLL | MainScreen.NO_HORIZONTAL_SCROLL);
@@ -27,6 +27,22 @@ public class SmartBridgeScreen extends MainScreen {
         
         VerticalFieldManager header = new VerticalFieldManager(Field.FIELD_HCENTER);
         header.setPadding(10, 0, 5, 0); 
+        
+        HorizontalFieldManager topBanner = new HorizontalFieldManager(Field.FIELD_HCENTER);
+        topBanner.setPadding(0, 0, 10, 0);
+        
+        batteryLabel = new DarkLabelField("\uD83D\uDCF1 --%", 0x00FF00); // 📱
+        weatherLabel = new DarkLabelField("  \u2601 --°C", 0x00A2E8); // ☁️
+        
+        try {
+            Font bannerFont = Font.getDefault().derive(Font.BOLD, 18);
+            batteryLabel.setFont(bannerFont);
+            weatherLabel.setFont(bannerFont);
+        } catch (Throwable e) {}
+        
+        topBanner.add(batteryLabel);
+        topBanner.add(weatherLabel);
+        header.add(topBanner);
         
         boolean isNight = app.getSettingsManager().isNightMode();
         int clockColor = isNight ? 0x555555 : Color.WHITE;
@@ -39,26 +55,23 @@ public class SmartBridgeScreen extends MainScreen {
         dateLabel = new DarkLabelField("---", Field.FIELD_HCENTER, 0xAAAAAA);
         try { dateLabel.setFont(Font.getDefault().derive(Font.PLAIN, 20)); } catch(Exception e){}
         
-        weatherLabel = new DarkLabelField("", Field.FIELD_HCENTER, 0x0078D7); // Blueish for weather
-        
         header.add(clockLabel);
         header.add(dateLabel);
-        header.add(weatherLabel);
         
         HorizontalFieldManager statusContainer = new HorizontalFieldManager(Field.FIELD_HCENTER);
         statusContainer.setPadding(5, 0, 10, 0);
         
         btStatusLabel = new DarkLabelField("[BT: WAIT] ", 0xFF0000); 
-        batteryLabel = new DarkLabelField("[AND: --%] [BB: --%]", 0xAAAAAA);
+        bbBatteryLabel = new DarkLabelField("[BB: --%]", 0xAAAAAA);
         
         try {
             Font smallFont = Font.getDefault().derive(Font.PLAIN, 14);
             btStatusLabel.setFont(smallFont);
-            batteryLabel.setFont(smallFont);
+            bbBatteryLabel.setFont(smallFont);
         } catch (Throwable e) {}
         
         statusContainer.add(btStatusLabel);
-        statusContainer.add(batteryLabel);
+        statusContainer.add(bbBatteryLabel);
         header.add(statusContainer);
         
         add(header);
@@ -158,15 +171,10 @@ public class SmartBridgeScreen extends MainScreen {
         int year = cal.get(Calendar.YEAR);
         dateLabel.setText((day < 10 ? "0"+day : "" + day) + "/" + (month < 10 ? "0"+month : "" + month) + "/" + year);
         
-        String currentBat = batteryLabel.getText();
-        int andIndex = currentBat.indexOf("[AND: ");
-        String andBat = "--%";
-        if (andIndex != -1) {
-            int end = currentBat.indexOf("]", andIndex);
-            if (end != -1) andBat = currentBat.substring(andIndex + 6, end);
-        }
         int bbBat = BatteryManager.getBatteryLevel();
-        batteryLabel.setText("[AND: " + andBat + "] [BB: " + bbBat + "%]");
+        if (bbBatteryLabel != null) {
+            bbBatteryLabel.setText("[BB: " + bbBat + "%]");
+        }
         
         // Refresh Night Mode color if changed
         boolean isNight = app.getSettingsManager().isNightMode();
@@ -183,19 +191,12 @@ public class SmartBridgeScreen extends MainScreen {
         }
     }
     
-    public void updateWeather(String temp, String cond) {
-        weatherLabel.setText(temp + " - " + cond);
+    public void updateWeather(String temp, String unit, String cond, String city) {
+        weatherLabel.setText("  \u2601 " + temp + "°" + unit + " " + cond);
     }
-
+    
     public void updateBattery(String level) {
-        String currentBat = batteryLabel.getText();
-        int bbIndex = currentBat.indexOf("[BB: ");
-        String bbBat = "--%";
-        if (bbIndex != -1) {
-            int end = currentBat.indexOf("]", bbIndex);
-            if (end != -1) bbBat = currentBat.substring(bbIndex + 5, end);
-        }
-        batteryLabel.setText("[AND: " + level + "%] [BB: " + bbBat + "]");
+        batteryLabel.setText("\uD83D\uDCF1 " + level + "%");
     }
     
     public void updateNotificationCount(int count) {
