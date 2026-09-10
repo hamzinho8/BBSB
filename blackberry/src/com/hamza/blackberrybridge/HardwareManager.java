@@ -1,37 +1,50 @@
 package com.hamza.blackberrybridge;
 
-import net.rim.device.api.system.Alert;
+import net.rim.device.api.notification.NotificationsManager;
+import net.rim.device.api.notification.NotificationsConstants;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class HardwareManager {
     private static Timer vibrateTimer;
+    private static Timer findPhoneTimer;
+    private static final long NOTIF_ID = 0x5a3b92c4L; // Unique ID for SmartBridge
+
+    static {
+        try {
+            // Register application notification source in BlackBerry OS
+            NotificationsManager.registerSource(NOTIF_ID, "SmartBridge", NotificationsConstants.DEFAULT_LEVEL);
+        } catch (Throwable t) {}
+    }
 
     public static void triggerMessageAlert() {
-        if (Alert.isVibrateSupported()) {
-            Alert.startVibrate(500); // 500ms
-        }
+        try {
+            NotificationsManager.triggerNotification(NOTIF_ID, -1, 500, null);
+        } catch (Throwable t) {}
     }
     
     public static void stopMessageAlert() {
+        try {
+            NotificationsManager.cancelNotification(NOTIF_ID);
+        } catch (Throwable t) {}
     }
     
     public static void triggerNotificationAlert(SmartBridgeApp app, String appName) {
-        if (Alert.isVibrateSupported()) {
-            Alert.startVibrate(500); // 500ms
-        }
+        try {
+            NotificationsManager.triggerNotification(NOTIF_ID, -1, 500, null);
+        } catch (Throwable t) {}
     }
     
     public static void triggerCallAlert(SmartBridgeApp app) {
-        if (Alert.isVibrateSupported()) {
-            stopAlerts();
-            vibrateTimer = new Timer();
-            vibrateTimer.scheduleAtFixedRate(new TimerTask() {
-                public void run() {
-                    Alert.startVibrate(255);
-                }
-            }, 0, 1000); // Vibrate every second
-        }
+        stopAlerts();
+        vibrateTimer = new Timer();
+        vibrateTimer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                try {
+                    NotificationsManager.triggerNotification(NOTIF_ID, -1, 255, null);
+                } catch (Throwable t) {}
+            }
+        }, 0, 1000);
     }
     
     public static void stopAlerts() {
@@ -39,16 +52,19 @@ public class HardwareManager {
             vibrateTimer.cancel();
             vibrateTimer = null;
         }
+        try {
+            NotificationsManager.cancelNotification(NOTIF_ID);
+        } catch (Throwable t) {}
     }
-    
-    private static Timer findPhoneTimer;
     
     public static void startFindPhoneAlert() {
         stopFindPhoneAlert();
         findPhoneTimer = new Timer();
         findPhoneTimer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
-                if (Alert.isVibrateSupported()) Alert.startVibrate(255);
+                try {
+                    NotificationsManager.triggerNotification(NOTIF_ID, -1, 255, null);
+                } catch (Throwable t) {}
             }
         }, 0, 1000);
     }
@@ -58,5 +74,8 @@ public class HardwareManager {
             findPhoneTimer.cancel();
             findPhoneTimer = null;
         }
+        try {
+            NotificationsManager.cancelNotification(NOTIF_ID);
+        } catch (Throwable t) {}
     }
 }
