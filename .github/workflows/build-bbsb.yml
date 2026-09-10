@@ -97,7 +97,12 @@ jobs:
         echo "Lancement de ant avec BLACKBERRY_JDE_HOME=$BLACKBERRY_JDE_HOME"
         # On se place dans le dossier blackberry à la racine du dépôt
         cd blackberry
-        ant build
+        ant build 2> rapc_errors.txt > rapc_output.txt || true
+        cat rapc_output.txt
+        grep -i "requires signing" rapc_output.txt > security-api-report.txt || true
+        grep -i "Warning!:" rapc_output.txt >> security-api-report.txt || true
+        echo "RAPC Security Report Generated:"
+        cat security-api-report.txt
 
     - name: 📦 Sauvegarde des artefacts
       uses: actions/upload-artifact@v4
@@ -108,3 +113,5 @@ jobs:
           blackberry/*.jad
           blackberry/*.alx
           blackberry/*.jar
+          blackberry/security-api-report.txt
+          blackberry/rapc_output.txt
