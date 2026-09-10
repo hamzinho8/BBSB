@@ -1,4 +1,4 @@
-# BlackBerrySmartBridge
+# BBSmartBridge
 
 Une application native complète pour transformer le BlackBerry Bold 9790 en compagnon intelligent.
 
