@@ -208,12 +208,6 @@ public class SmartBridgeScreen extends MainScreen {
     }
     
     protected boolean keyDown(int keycode, int time) {
-        int key = Keypad.key(keycode);
-        if (key == Keypad.KEY_END) { 
-            // Instead of System.exit(0), request background mode to keep receiving BT events!
-            Application.getApplication().requestBackground();
-            return true;
-        }
         return super.keyDown(keycode, time);
     }
     

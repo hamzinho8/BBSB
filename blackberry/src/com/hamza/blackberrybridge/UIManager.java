@@ -20,7 +20,7 @@ public class UIManager {
     public void pushGlobalScreen(final Screen screen) {
         net.rim.device.api.system.Application.getApplication().invokeLater(new Runnable() {
             public void run() {
-                net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(screen, 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
+                net.rim.device.api.ui.UiApplication.getUiApplication().pushScreen(screen);
             }
         });
     }
@@ -36,7 +36,7 @@ public class UIManager {
     public void showNewMessagePopup(final String id, final String sender, final String body) {
         Application.getApplication().invokeLater(new Runnable() {
             public void run() {
-                net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(new MessagePopupScreen(app, id, sender, body), 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
+                net.rim.device.api.ui.UiApplication.getUiApplication().pushScreen(new MessagePopupScreen(app, id, sender, body));
             }
         });
     }
@@ -109,7 +109,7 @@ public class UIManager {
             public void run() {
                 if (findPhonePopup == null) {
                     findPhonePopup = new FindPhonePopup();
-                    net.rim.device.api.ui.UiApplication.getUiApplication().pushGlobalScreen(findPhonePopup, 0, net.rim.device.api.ui.UiEngine.GLOBAL_QUEUE);
+                    net.rim.device.api.ui.UiApplication.getUiApplication().pushScreen(findPhonePopup);
                 }
             }
         });
