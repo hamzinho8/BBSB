@@ -54,7 +54,6 @@ public class HardwareManager {
         findPhoneTimer = new Timer();
         findPhoneTimer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
-                Alert.startAudio(Alert.BEEP, 100);
                 if (Alert.isVibrateSupported()) Alert.startVibrate(255);
                 try { net.rim.device.api.system.LED.setState(net.rim.device.api.system.LED.STATE_BLINKING); } catch(Throwable t) {}
             }

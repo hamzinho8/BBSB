@@ -18,6 +18,7 @@ public class SmartBridgeScreen extends MainScreen {
     private DarkButtonField btnNotifs;
     private SmartBridgeApp app;
     private DarkLabelField bbBatteryLabel;
+    private Timer uiTimer;
     
     public SmartBridgeScreen(SmartBridgeApp application) {
         super(MainScreen.NO_VERTICAL_SCROLL | MainScreen.NO_HORIZONTAL_SCROLL);
