@@ -31,8 +31,8 @@ public class SmartBridgeScreen extends MainScreen {
         HorizontalFieldManager topBanner = new HorizontalFieldManager(Field.FIELD_HCENTER);
         topBanner.setPadding(0, 0, 10, 0);
         
-        batteryLabel = new DarkLabelField("\uD83D\uDCF1 --%", 0x00FF00); // 📱
-        weatherLabel = new DarkLabelField("  \u2601 --°C", 0x00A2E8); // ☁️
+        batteryLabel = new DarkLabelField("\uD83D\uDCF1 --%", 0x00FF00); 
+        weatherLabel = new DarkLabelField("  \u2601 -- deg C", 0x00A2E8); 
         
         try {
             Font bannerFont = Font.getDefault().derive(Font.BOLD, 18);
@@ -214,6 +214,8 @@ public class SmartBridgeScreen extends MainScreen {
             return true;
         }
         return super.keyDown(keycode, time);
+    }
+    
     protected void makeMenu(net.rim.device.api.ui.component.Menu menu, int instance) {
         super.makeMenu(menu, instance);
         menu.add(new net.rim.device.api.ui.MenuItem("Faire sonner l'Android", 110, 10) {
@@ -226,7 +228,5 @@ public class SmartBridgeScreen extends MainScreen {
                 app.getConnectionManager().sendData("FIND_PHONE_STOP\n");
             }
         });
-    }
-
     }
 }

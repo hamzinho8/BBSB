@@ -103,11 +103,11 @@ public class MediaScreen extends MainScreen {
     
     private String getFormattedState(String state) {
         if ("PLAYING".equals(state)) {
-            return "\uD83C\uDFB5 Lecture en cours..."; // 🎵
+            return "\uD83C\uDFB5 Lecture en cours..."; 
         } else if ("PAUSED".equals(state)) {
-            return "\u23F8\uFE0F En pause..."; // ⏸️
+            return "\u23F8\uFE0F En pause..."; 
         } else if ("STOPPED".equals(state)) {
-            return "\u23F9\uFE0F Arrêté"; // ⏹️
+            return "\u23F9\uFE0F Arrete"; 
         }
         return state;
     }
